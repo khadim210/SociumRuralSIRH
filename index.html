@@ -1,0 +1,3219 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socium Rural SIRH - Formalisez le travail rural simplement</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- ⚠️ IMPORTANT: Replace with your actual Supabase credentials -->
+    <!-- Get these from: https://app.supabase.com/project/_/settings/api -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --terracotta: #C1440E;
+            --terracotta-light: #D85B2A;
+            --terracotta-dark: #9A3509;
+            --sand: #F2D4A2;
+            --sand-light: #F8E5C5;
+            --forest-green: #2D6A4F;
+            --forest-green-light: #3A8A65;
+            --ivory: #FAF7F0;
+            --charcoal: #1C1C1C;
+            --charcoal-light: #3A3A3A;
+
+            --font-display: 'Fraunces', serif;
+            --font-body: 'DM Sans', sans-serif;
+
+            --shadow-sm: 0 2px 4px rgba(28, 28, 28, 0.08);
+            --shadow-md: 0 4px 12px rgba(28, 28, 28, 0.12);
+            --shadow-lg: 0 8px 24px rgba(28, 28, 28, 0.16);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--charcoal);
+            background: var(--ivory);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            z-index: -1;
+            background-image:
+                repeating-linear-gradient(45deg, transparent, transparent 2px, var(--charcoal) 2px, var(--charcoal) 4px),
+                repeating-linear-gradient(-45deg, transparent, transparent 2px, var(--charcoal) 2px, var(--charcoal) 4px);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-display);
+            line-height: 1.2;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--ivory);
+            border-bottom: 1px solid rgba(193, 68, 14, 0.1);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--terracotta);
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: var(--charcoal);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-menu a:hover {
+            color: var(--terracotta);
+        }
+
+        .language-switcher {
+            display: flex;
+            gap: 8px;
+            padding: 4px;
+            background: var(--sand-light);
+            border-radius: 8px;
+        }
+
+        .lang-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: var(--charcoal);
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .lang-btn.active {
+            background: var(--terracotta);
+            color: white;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: var(--font-body);
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--terracotta);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            background: var(--terracotta-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--charcoal);
+            border: 2px solid var(--charcoal);
+        }
+
+        .btn-secondary:hover {
+            background: var(--charcoal);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--forest-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: var(--forest-green-light);
+        }
+
+        .hero {
+            margin-top: 80px;
+            padding: 80px 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            min-height: calc(100vh - 80px);
+        }
+
+        .hero-content h1 {
+            font-size: 56px;
+            margin-bottom: 24px;
+            color: var(--terracotta);
+        }
+
+        .hero-content p {
+            font-size: 20px;
+            margin-bottom: 32px;
+            color: var(--charcoal-light);
+            line-height: 1.5;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+        }
+
+        .floating-badge {
+            display: inline-block;
+            background: var(--sand);
+            padding: 8px 16px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--terracotta);
+        }
+
+        .hero-image {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mockup-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .phone-mockup {
+            width: 280px;
+            height: 560px;
+            background: var(--charcoal);
+            border-radius: 32px;
+            padding: 12px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: var(--ivory);
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            color: var(--charcoal);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: var(--font-display);
+            font-size: 36px;
+            color: var(--terracotta);
+            font-weight: 700;
+        }
+
+        .stat-label {
+            color: var(--charcoal-light);
+            font-size: 14px;
+        }
+
+        section {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 42px;
+            margin-bottom: 16px;
+            color: var(--terracotta);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: var(--charcoal-light);
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+            border: 1px solid rgba(193, 68, 14, 0.1);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--sand);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: var(--terracotta);
+            font-size: 24px;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--charcoal-light);
+            font-size: 15px;
+        }
+
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 32px;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 64px;
+            height: 64px;
+            background: var(--terracotta);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 auto 20px;
+        }
+
+        .step h3 {
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .step p {
+            color: var(--charcoal-light);
+            font-size: 14px;
+        }
+
+        .dashboard-view {
+            display: none;
+        }
+
+        .dashboard-view.active {
+            display: block;
+        }
+
+        .landing-view.hidden {
+            display: none;
+        }
+
+        .dashboard-header {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            background: var(--forest-green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            color: var(--charcoal-light);
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-family: var(--font-display);
+            font-size: 32px;
+            color: var(--terracotta);
+            font-weight: 700;
+        }
+
+        .dashboard-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 32px;
+        }
+
+        .workers-section {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .workers-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .workers-table thead {
+            background: var(--sand-light);
+        }
+
+        .workers-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .workers-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(193, 68, 14, 0.1);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.active {
+            background: rgba(45, 106, 79, 0.1);
+            color: var(--forest-green);
+        }
+
+        .status-badge.pending {
+            background: rgba(193, 68, 14, 0.1);
+            color: var(--terracotta);
+        }
+
+        .status-badge.inactive {
+            background: rgba(28, 28, 28, 0.1);
+            color: var(--charcoal);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .status-badge.active .status-dot {
+            background: var(--forest-green);
+        }
+
+        .status-badge.pending .status-dot {
+            background: var(--terracotta);
+        }
+
+        .status-badge.inactive .status-dot {
+            background: var(--charcoal);
+        }
+
+        .chart-section {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        .pricing-card {
+            background: white;
+            padding: 40px 32px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 2px solid rgba(193, 68, 14, 0.1);
+            transition: all 0.3s;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--terracotta);
+            transform: scale(1.05);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-4px);
+        }
+
+        .pricing-tier {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--terracotta);
+            margin-bottom: 12px;
+        }
+
+        .pricing-price {
+            font-family: var(--font-display);
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .pricing-period {
+            color: var(--charcoal-light);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 32px;
+        }
+
+        .pricing-features li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(193, 68, 14, 0.1);
+            font-size: 15px;
+        }
+
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+        }
+
+        .testimonial-card {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .testimonial-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-style: italic;
+            color: var(--charcoal-light);
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .author-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--sand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--terracotta);
+        }
+
+        .author-info h4 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .author-info p {
+            font-size: 13px;
+            color: var(--charcoal-light);
+        }
+
+        footer {
+            background: var(--charcoal);
+            color: white;
+            padding: 60px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 40px;
+        }
+
+        .footer-about h3 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: var(--terracotta);
+        }
+
+        .footer-links h4 {
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links ul li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(28, 28, 28, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--charcoal-light);
+        }
+
+        .modal-title {
+            font-size: 28px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(193, 68, 14, 0.2);
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--terracotta);
+        }
+
+        .form-tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid rgba(193, 68, 14, 0.1);
+        }
+
+        .form-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--charcoal-light);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .form-tab.active {
+            color: var(--terracotta);
+            border-bottom-color: var(--terracotta);
+        }
+
+        .chatbot-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 60px;
+            height: 60px;
+            background: var(--terracotta);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s;
+            z-index: 1500;
+        }
+
+        .chatbot-fab:hover {
+            transform: scale(1.1);
+        }
+
+        .chatbot-window {
+            position: fixed;
+            bottom: 100px;
+            right: 24px;
+            width: 380px;
+            height: 500px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            flex-direction: column;
+            z-index: 1500;
+        }
+
+        .chatbot-window.active {
+            display: flex;
+        }
+
+        .chatbot-header {
+            padding: 20px;
+            background: var(--terracotta);
+            color: white;
+            border-radius: 16px 16px 0 0;
+            font-weight: 600;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+
+        .chat-message.user {
+            background: var(--sand);
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .chat-message.ai {
+            background: var(--ivory);
+            align-self: flex-start;
+        }
+
+        .chatbot-input-container {
+            padding: 16px;
+            border-top: 1px solid rgba(193, 68, 14, 0.1);
+        }
+
+        .chatbot-input {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid rgba(193, 68, 14, 0.2);
+            border-radius: 8px;
+            font-family: var(--font-body);
+        }
+
+        .chatbot-input button {
+            padding: 10px 16px;
+            background: var(--terracotta);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .quick-question {
+            padding: 8px 12px;
+            background: var(--sand-light);
+            border: none;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-question:hover {
+            background: var(--sand);
+        }
+
+        .toast {
+            position: fixed;
+            top: 100px;
+            right: 24px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 3000;
+            animation: slideIn 0.3s;
+        }
+
+        .toast.active {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--forest-green);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--terracotta);
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(193, 68, 14, 0.1);
+            border-top-color: var(--terracotta);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--charcoal-light);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 3px;
+            background: var(--charcoal);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                grid-template-columns: 1fr;
+                text-align: center;
+                padding: 40px 0;
+            }
+
+            .hero-content h1 {
+                font-size: 36px;
+            }
+
+            .hero-cta {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-container {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-content {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .nav-menu {
+                position: fixed;
+                top: 64px;
+                left: -100%;
+                width: 100%;
+                background: white;
+                flex-direction: column;
+                padding: 24px;
+                box-shadow: var(--shadow-lg);
+                transition: left 0.3s;
+            }
+
+            .nav-menu.active {
+                left: 0;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .language-switcher {
+                flex-wrap: wrap;
+            }
+
+            .chatbot-window {
+                width: calc(100% - 48px);
+                right: 24px;
+            }
+
+            .workers-table {
+                font-size: 12px;
+            }
+
+            .workers-table th,
+            .workers-table td {
+                padding: 8px;
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s, transform 0.6s;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <a href="#" class="logo" data-i18n="appName">Socium Rural</a>
+            <button class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#features" data-i18n="nav.features">Fonctionnalités</a></li>
+                <li><a href="#how" data-i18n="nav.how">Comment ça marche</a></li>
+                <li><a href="#pricing" data-i18n="nav.pricing">Tarifs</a></li>
+                <li>
+                    <div class="language-switcher">
+                        <button class="lang-btn active" data-lang="fr">FR</button>
+                        <button class="lang-btn" data-lang="en">EN</button>
+                        <button class="lang-btn" data-lang="sw">SW</button>
+                        <button class="lang-btn" data-lang="ha">HA</button>
+                        <button class="lang-btn" data-lang="pt">PT</button>
+                    </div>
+                </li>
+                <li class="auth-buttons">
+                    <button class="btn btn-secondary" data-i18n="nav.login" id="loginBtn">Connexion</button>
+                    <button class="btn btn-primary" data-i18n="nav.signup" id="signupBtn">Commencer</button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Landing View -->
+    <div class="landing-view" id="landingView">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="floating-badge" data-i18n="hero.badge">Compatible SMS · USSD · Voix</div>
+                    <h1 data-i18n="hero.title">Formalisez le travail rural. Simplement.</h1>
+                    <p data-i18n="hero.subtitle">Contrats, salaires et cotisations sociales pour chaque travailleur, même sans smartphone.</p>
+                    <div class="hero-cta">
+                        <button class="btn btn-primary" data-i18n="hero.cta1" id="ctaSignup">Commencer gratuitement</button>
+                        <button class="btn btn-secondary" data-i18n="hero.cta2" id="ctaDemo">Voir la démo</button>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="mockup-container">
+                    <div class="phone-mockup">
+                        <div class="phone-screen" id="ussdScreen">
+                            <div data-i18n="ussd.menu">*123# MENU<br><br>1. Voir mon contrat<br>2. Consulter salaire<br>3. Historique paiements<br>4. Parler à un agent</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section>
+            <div class="container">
+                <div class="stats-row">
+                    <div class="stat fade-in">
+                        <div class="stat-number" data-i18n="stats.workers">12 000+</div>
+                        <div class="stat-label" data-i18n="stats.workersLabel">Travailleurs formalisés</div>
+                    </div>
+                    <div class="stat fade-in">
+                        <div class="stat-number" data-i18n="stats.rate">98%</div>
+                        <div class="stat-label" data-i18n="stats.rateLabel">Taux de paiement</div>
+                    </div>
+                    <div class="stat fade-in">
+                        <div class="stat-number" data-i18n="stats.countries">6</div>
+                        <div class="stat-label" data-i18n="stats.countriesLabel">Pays couverts</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features">
+            <div class="container">
+                <h2 class="section-title" data-i18n="features.title">Fonctionnalités</h2>
+                <p class="section-subtitle" data-i18n="features.subtitle">Tout ce dont vous avez besoin pour gérer vos équipes rurales</p>
+                <div class="features-grid">
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">🤖</div>
+                        <h3 data-i18n="features.ai.title">IA Paie Auto</h3>
+                        <p data-i18n="features.ai.desc">Calcul automatique des salaires et cotisations sociales</p>
+                    </div>
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">📄</div>
+                        <h3 data-i18n="features.contracts.title">Contrats Intelligents</h3>
+                        <p data-i18n="features.contracts.desc">Génération automatique de contrats conformes</p>
+                    </div>
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">📱</div>
+                        <h3 data-i18n="features.sms.title">SMS/USSD</h3>
+                        <p data-i18n="features.sms.desc">Accessible sans smartphone ni internet</p>
+                    </div>
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">💳</div>
+                        <h3 data-i18n="features.mobile.title">Mobile Money</h3>
+                        <p data-i18n="features.mobile.desc">Paiements instantanés par mobile money</p>
+                    </div>
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">🔒</div>
+                        <h3 data-i18n="features.social.title">Sécurité Sociale</h3>
+                        <p data-i18n="features.social.desc">Cotisations santé, retraite et accidents</p>
+                    </div>
+                    <div class="feature-card fade-in">
+                        <div class="feature-icon">📊</div>
+                        <h3 data-i18n="features.dashboard.title">Tableau de Bord</h3>
+                        <p data-i18n="features.dashboard.desc">Suivi en temps réel de toutes vos données</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how">
+            <div class="container">
+                <h2 class="section-title" data-i18n="how.title">Comment ça marche</h2>
+                <p class="section-subtitle" data-i18n="how.subtitle">En 4 étapes simples</p>
+                <div class="steps-container">
+                    <div class="step fade-in">
+                        <div class="step-number">1</div>
+                        <h3 data-i18n="how.step1.title">Inscription</h3>
+                        <p data-i18n="how.step1.desc">Créez votre compte gratuitement</p>
+                    </div>
+                    <div class="step fade-in">
+                        <div class="step-number">2</div>
+                        <h3 data-i18n="how.step2.title">Ajout travailleurs</h3>
+                        <p data-i18n="how.step2.desc">Enregistrez vos employés</p>
+                    </div>
+                    <div class="step fade-in">
+                        <div class="step-number">3</div>
+                        <h3 data-i18n="how.step3.title">Génération auto</h3>
+                        <p data-i18n="how.step3.desc">L'IA crée contrats et paies</p>
+                    </div>
+                    <div class="step fade-in">
+                        <div class="step-number">4</div>
+                        <h3 data-i18n="how.step4.title">Paiement</h3>
+                        <p data-i18n="how.step4.desc">Payez via mobile money</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="pricing">
+            <div class="container">
+                <h2 class="section-title" data-i18n="pricing.title">Tarifs</h2>
+                <p class="section-subtitle" data-i18n="pricing.subtitle">Choisissez l'offre adaptée à vos besoins</p>
+                <div class="pricing-grid">
+                    <div class="pricing-card fade-in">
+                        <div class="pricing-tier" data-i18n="pricing.starter.tier">Démarrage</div>
+                        <div class="pricing-price" data-i18n="pricing.starter.price">Gratuit</div>
+                        <div class="pricing-period" data-i18n="pricing.starter.period">Pour toujours</div>
+                        <ul class="pricing-features">
+                            <li data-i18n="pricing.starter.feat1">Jusqu'à 10 travailleurs</li>
+                            <li data-i18n="pricing.starter.feat2">Contrats basiques</li>
+                            <li data-i18n="pricing.starter.feat3">Paiements SMS</li>
+                            <li data-i18n="pricing.starter.feat4">Support email</li>
+                        </ul>
+                        <button class="btn btn-secondary" data-i18n="pricing.cta" style="width: 100%">Commencer</button>
+                    </div>
+                    <div class="pricing-card featured fade-in">
+                        <div class="pricing-tier" data-i18n="pricing.pro.tier">Professionnel</div>
+                        <div class="pricing-price">2500<span style="font-size: 20px"> XOF</span></div>
+                        <div class="pricing-period" data-i18n="pricing.pro.period">Par travailleur / mois</div>
+                        <ul class="pricing-features">
+                            <li data-i18n="pricing.pro.feat1">Travailleurs illimités</li>
+                            <li data-i18n="pricing.pro.feat2">IA contrats avancés</li>
+                            <li data-i18n="pricing.pro.feat3">Mobile money</li>
+                            <li data-i18n="pricing.pro.feat4">Cotisations sociales auto</li>
+                            <li data-i18n="pricing.pro.feat5">Support prioritaire</li>
+                        </ul>
+                        <button class="btn btn-primary" data-i18n="pricing.cta" style="width: 100%">Commencer</button>
+                    </div>
+                    <div class="pricing-card fade-in">
+                        <div class="pricing-tier" data-i18n="pricing.enterprise.tier">Entreprise</div>
+                        <div class="pricing-price" data-i18n="pricing.enterprise.price">Sur devis</div>
+                        <div class="pricing-period" data-i18n="pricing.enterprise.period">Volume important</div>
+                        <ul class="pricing-features">
+                            <li data-i18n="pricing.enterprise.feat1">API personnalisée</li>
+                            <li data-i18n="pricing.enterprise.feat2">Formation sur site</li>
+                            <li data-i18n="pricing.enterprise.feat3">Multi-pays</li>
+                            <li data-i18n="pricing.enterprise.feat4">Gestionnaire dédié</li>
+                            <li data-i18n="pricing.enterprise.feat5">SLA garanti</li>
+                        </ul>
+                        <button class="btn btn-secondary" data-i18n="pricing.ctaContact" style="width: 100%">Nous contacter</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section>
+            <div class="container">
+                <h2 class="section-title" data-i18n="testimonials.title">Témoignages</h2>
+                <p class="section-subtitle" data-i18n="testimonials.subtitle">Ce que disent nos utilisateurs</p>
+                <div class="testimonials-grid">
+                    <div class="testimonial-card fade-in">
+                        <p class="testimonial-text" data-i18n="testimonials.t1.text">"Socium a transformé notre gestion RH. Avant, c'était le chaos. Maintenant, tout est automatisé et mes travailleurs sont payés à temps."</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">AK</div>
+                            <div class="author-info">
+                                <h4 data-i18n="testimonials.t1.name">Amadou Koné</h4>
+                                <p data-i18n="testimonials.t1.role">Propriétaire de plantation, Côte d'Ivoire</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card fade-in">
+                        <p class="testimonial-text" data-i18n="testimonials.t2.text">"Enfin une solution qui comprend nos réalités rurales. Le système USSD est génial, mes employés n'ont pas besoin de smartphone."</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">FN</div>
+                            <div class="author-info">
+                                <h4 data-i18n="testimonials.t2.name">Fatou Ndiaye</h4>
+                                <p data-i18n="testimonials.t2.role">Coopérative agricole, Sénégal</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Dashboard View -->
+    <div class="dashboard-view" id="dashboardView">
+        <section style="margin-top: 80px; padding: 40px 0;">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div class="dashboard-title">
+                        <h1 data-i18n="dashboard.title">Tableau de Bord</h1>
+                        <div class="live-indicator"></div>
+                        <span style="font-size: 12px; color: var(--forest-green);" data-i18n="dashboard.live">Live</span>
+                    </div>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <span id="userNameDisplay" style="font-weight: 600;"></span>
+                        <button class="btn btn-secondary" id="logoutBtn" data-i18n="dashboard.logout">Déconnexion</button>
+                    </div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card fade-in">
+                        <div class="kpi-label" data-i18n="dashboard.kpi.workers">Travailleurs actifs</div>
+                        <div class="kpi-value" id="kpiWorkers">0</div>
+                    </div>
+                    <div class="kpi-card fade-in">
+                        <div class="kpi-label" data-i18n="dashboard.kpi.payroll">Paie mensuelle</div>
+                        <div class="kpi-value" id="kpiPayroll">0</div>
+                    </div>
+                    <div class="kpi-card fade-in">
+                        <div class="kpi-label" data-i18n="dashboard.kpi.contracts">Contrats actifs</div>
+                        <div class="kpi-value" id="kpiContracts">0</div>
+                    </div>
+                    <div class="kpi-card fade-in">
+                        <div class="kpi-label" data-i18n="dashboard.kpi.pending">Paiements en attente</div>
+                        <div class="kpi-value" id="kpiPending">0</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <div class="workers-section">
+                        <div class="section-header">
+                            <h3 data-i18n="dashboard.workers.title">Travailleurs</h3>
+                            <button class="btn btn-primary" id="addWorkerBtn" data-i18n="dashboard.workers.add">+ Ajouter</button>
+                        </div>
+                        <div id="workersTableContainer">
+                            <table class="workers-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="dashboard.workers.name">Nom</th>
+                                        <th data-i18n="dashboard.workers.role">Fonction</th>
+                                        <th data-i18n="dashboard.workers.rate">Tarif journalier</th>
+                                        <th data-i18n="dashboard.workers.status">Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="workersTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="chart-section">
+                        <h3 data-i18n="dashboard.chart.title">Paie mensuelle</h3>
+                        <div class="chart-container">
+                            <svg id="payrollChart" width="100%" height="100%" viewBox="0 0 300 300"></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 32px; display: flex; gap: 16px;">
+                    <button class="btn btn-success" id="generatePayrollBtn" data-i18n="dashboard.actions.payroll">Générer Paie</button>
+                    <button class="btn btn-primary" id="newContractBtn" data-i18n="dashboard.actions.contract">Nouveau Contrat</button>
+                    <button class="btn btn-secondary" id="toggleUssdBtn" data-i18n="dashboard.actions.ussd">Mode USSD</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-about">
+                    <h3 data-i18n="appName">Socium Rural</h3>
+                    <p data-i18n="footer.about">La première plateforme SIRH conçue pour les travailleurs ruraux d'Afrique.</p>
+                </div>
+                <div class="footer-links">
+                    <h4 data-i18n="footer.product">Produit</h4>
+                    <ul>
+                        <li><a href="#features" data-i18n="footer.features">Fonctionnalités</a></li>
+                        <li><a href="#pricing" data-i18n="footer.pricing">Tarifs</a></li>
+                        <li><a href="#" data-i18n="footer.demo">Démo</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4 data-i18n="footer.company">Entreprise</h4>
+                    <ul>
+                        <li><a href="#" data-i18n="footer.about2">À propos</a></li>
+                        <li><a href="#" data-i18n="footer.blog">Blog</a></li>
+                        <li><a href="#" data-i18n="footer.contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4 data-i18n="footer.legal">Légal</h4>
+                    <ul>
+                        <li><a href="#" data-i18n="footer.privacy">Confidentialité</a></li>
+                        <li><a href="#" data-i18n="footer.terms">Conditions</a></li>
+                        <li><a href="#" data-i18n="footer.security">Sécurité</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="footer.copyright">© 2024 Socium Rural SIRH. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeAuthModal">×</button>
+            <h2 class="modal-title" id="authModalTitle" data-i18n="auth.login.title">Connexion</h2>
+            <div class="form-tabs">
+                <button class="form-tab active" id="loginTab" data-i18n="auth.login.tab">Connexion</button>
+                <button class="form-tab" id="signupTab" data-i18n="auth.signup.tab">Inscription</button>
+            </div>
+            <form id="authForm">
+                <div class="form-group">
+                    <label for="authEmail" data-i18n="auth.email">Email</label>
+                    <input type="email" id="authEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="authPassword" data-i18n="auth.password">Mot de passe</label>
+                    <input type="password" id="authPassword" required>
+                </div>
+                <div class="form-group" id="fullNameGroup" style="display: none;">
+                    <label for="authFullName" data-i18n="auth.fullname">Nom complet</label>
+                    <input type="text" id="authFullName">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="authSubmitBtn" data-i18n="auth.login.submit">Se connecter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Worker Modal -->
+    <div class="modal" id="workerModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeWorkerModal">×</button>
+            <h2 class="modal-title" data-i18n="worker.modal.title">Ajouter un travailleur</h2>
+            <form id="workerForm">
+                <div class="form-group">
+                    <label for="workerName" data-i18n="worker.form.name">Nom complet</label>
+                    <input type="text" id="workerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="workerPhone" data-i18n="worker.form.phone">Téléphone</label>
+                    <input type="tel" id="workerPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="workerRole" data-i18n="worker.form.role">Fonction</label>
+                    <input type="text" id="workerRole" required>
+                </div>
+                <div class="form-group">
+                    <label for="workerRate" data-i18n="worker.form.rate">Tarif journalier</label>
+                    <input type="number" id="workerRate" required min="0" step="100">
+                </div>
+                <div class="form-group">
+                    <label for="workerCurrency" data-i18n="worker.form.currency">Devise</label>
+                    <select id="workerCurrency">
+                        <option value="XOF">XOF (Franc CFA)</option>
+                        <option value="KES">KES (Shilling kenyan)</option>
+                        <option value="GHS">GHS (Cedi ghanéen)</option>
+                        <option value="NGN">NGN (Naira nigérian)</option>
+                        <option value="MZN">MZN (Metical mozambicain)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="workerNationalId" data-i18n="worker.form.nationalid">Numéro d'identification (optionnel)</label>
+                    <input type="text" id="workerNationalId">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" data-i18n="worker.form.submit">Ajouter le travailleur</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Contract Modal -->
+    <div class="modal" id="contractModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeContractModal">×</button>
+            <h2 class="modal-title" data-i18n="contract.modal.title">Créer un nouveau contrat</h2>
+            <form id="contractForm">
+                <div class="form-group">
+                    <label for="contractWorker" data-i18n="contract.form.worker">Sélectionner un travailleur</label>
+                    <select id="contractWorker" required>
+                        <option value="">-- Choisir --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="contractType" data-i18n="contract.form.type">Type de contrat</label>
+                    <select id="contractType" required>
+                        <option value="daily">Journalier</option>
+                        <option value="monthly">Mensuel</option>
+                        <option value="seasonal">Saisonnier</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="contractStartDate" data-i18n="contract.form.startdate">Date de début</label>
+                    <input type="date" id="contractStartDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="contractEndDate" data-i18n="contract.form.enddate">Date de fin (optionnel)</label>
+                    <input type="date" id="contractEndDate">
+                </div>
+                <div class="form-group">
+                    <label for="contractTerms" data-i18n="contract.form.terms">Conditions particulières (optionnel)</label>
+                    <textarea id="contractTerms" rows="4" placeholder="Horaires, lieu de travail, équipements fournis..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" data-i18n="contract.form.submit">Générer le contrat PDF</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Chatbot -->
+    <button class="chatbot-fab" id="chatbotFab">💬</button>
+
+    <div class="chatbot-window" id="chatbotWindow">
+        <div class="chatbot-header">
+            <span data-i18n="chatbot.title">Assistant IA Socium</span>
+        </div>
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="chat-message ai" data-i18n="chatbot.welcome">Bonjour! Comment puis-je vous aider aujourd'hui?</div>
+            <div class="quick-questions">
+                <button class="quick-question" data-i18n="chatbot.q1">Comment ajouter un travailleur?</button>
+                <button class="quick-question" data-i18n="chatbot.q2">Comment générer la paie?</button>
+                <button class="quick-question" data-i18n="chatbot.q3">Quelles sont les cotisations?</button>
+            </div>
+        </div>
+        <div class="chatbot-input-container">
+            <div class="chatbot-input">
+                <input type="text" id="chatInput" data-i18n-placeholder="chatbot.placeholder" placeholder="Posez votre question...">
+                <button id="chatSendBtn" data-i18n="chatbot.send">→</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // Supabase Configuration - Connected to your project
+        const SUPABASE_URL = 'https://lfvynjyetqhveovlcnlj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdnluanlldHFodmVvdmxjbmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzY5MTQsImV4cCI6MjA4OTIxMjkxNH0.cH_0gbffALMg150aMpE7L1u8vy0H0byjB9pzQAKo-B4';
+
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+        let currentLanguage = 'fr';
+        let workersSubscription = null;
+
+        // COMPLETE i18n TRANSLATIONS OBJECT (5 languages)
+        const TRANSLATIONS = {
+            fr: {
+                appName: 'Socium Rural',
+                'nav.features': 'Fonctionnalités',
+                'nav.how': 'Comment ça marche',
+                'nav.pricing': 'Tarifs',
+                'nav.login': 'Connexion',
+                'nav.signup': 'Commencer',
+                'hero.badge': 'Compatible SMS · USSD · Voix',
+                'hero.title': 'Formalisez le travail rural. Simplement.',
+                'hero.subtitle': 'Contrats, salaires et cotisations sociales pour chaque travailleur, même sans smartphone.',
+                'hero.cta1': 'Commencer gratuitement',
+                'hero.cta2': 'Voir la démo',
+                'ussd.menu': '*123# MENU\n\n1. Voir mon contrat\n2. Consulter salaire\n3. Historique paiements\n4. Parler à un agent',
+                'stats.workers': '12 000+',
+                'stats.workersLabel': 'Travailleurs formalisés',
+                'stats.rate': '98%',
+                'stats.rateLabel': 'Taux de paiement',
+                'stats.countries': '6',
+                'stats.countriesLabel': 'Pays couverts',
+                'features.title': 'Fonctionnalités',
+                'features.subtitle': 'Tout ce dont vous avez besoin pour gérer vos équipes rurales',
+                'features.ai.title': 'IA Paie Auto',
+                'features.ai.desc': 'Calcul automatique des salaires et cotisations sociales',
+                'features.contracts.title': 'Contrats Intelligents',
+                'features.contracts.desc': 'Génération automatique de contrats conformes',
+                'features.sms.title': 'SMS/USSD',
+                'features.sms.desc': 'Accessible sans smartphone ni internet',
+                'features.mobile.title': 'Mobile Money',
+                'features.mobile.desc': 'Paiements instantanés par mobile money',
+                'features.social.title': 'Sécurité Sociale',
+                'features.social.desc': 'Cotisations santé, retraite et accidents',
+                'features.dashboard.title': 'Tableau de Bord',
+                'features.dashboard.desc': 'Suivi en temps réel de toutes vos données',
+                'how.title': 'Comment ça marche',
+                'how.subtitle': 'En 4 étapes simples',
+                'how.step1.title': 'Inscription',
+                'how.step1.desc': 'Créez votre compte gratuitement',
+                'how.step2.title': 'Ajout travailleurs',
+                'how.step2.desc': 'Enregistrez vos employés',
+                'how.step3.title': 'Génération auto',
+                'how.step3.desc': "L'IA crée contrats et paies",
+                'how.step4.title': 'Paiement',
+                'how.step4.desc': 'Payez via mobile money',
+                'pricing.title': 'Tarifs',
+                'pricing.subtitle': 'Choisissez l\'offre adaptée à vos besoins',
+                'pricing.starter.tier': 'Démarrage',
+                'pricing.starter.price': 'Gratuit',
+                'pricing.starter.period': 'Pour toujours',
+                'pricing.starter.feat1': 'Jusqu\'à 10 travailleurs',
+                'pricing.starter.feat2': 'Contrats basiques',
+                'pricing.starter.feat3': 'Paiements SMS',
+                'pricing.starter.feat4': 'Support email',
+                'pricing.pro.tier': 'Professionnel',
+                'pricing.pro.period': 'Par travailleur / mois',
+                'pricing.pro.feat1': 'Travailleurs illimités',
+                'pricing.pro.feat2': 'IA contrats avancés',
+                'pricing.pro.feat3': 'Mobile money',
+                'pricing.pro.feat4': 'Cotisations sociales auto',
+                'pricing.pro.feat5': 'Support prioritaire',
+                'pricing.enterprise.tier': 'Entreprise',
+                'pricing.enterprise.price': 'Sur devis',
+                'pricing.enterprise.period': 'Volume important',
+                'pricing.enterprise.feat1': 'API personnalisée',
+                'pricing.enterprise.feat2': 'Formation sur site',
+                'pricing.enterprise.feat3': 'Multi-pays',
+                'pricing.enterprise.feat4': 'Gestionnaire dédié',
+                'pricing.enterprise.feat5': 'SLA garanti',
+                'pricing.cta': 'Commencer',
+                'pricing.ctaContact': 'Nous contacter',
+                'testimonials.title': 'Témoignages',
+                'testimonials.subtitle': 'Ce que disent nos utilisateurs',
+                'testimonials.t1.text': '"Socium a transformé notre gestion RH. Avant, c\'était le chaos. Maintenant, tout est automatisé et mes travailleurs sont payés à temps."',
+                'testimonials.t1.name': 'Amadou Koné',
+                'testimonials.t1.role': 'Propriétaire de plantation, Côte d\'Ivoire',
+                'testimonials.t2.text': '"Enfin une solution qui comprend nos réalités rurales. Le système USSD est génial, mes employés n\'ont pas besoin de smartphone."',
+                'testimonials.t2.name': 'Fatou Ndiaye',
+                'testimonials.t2.role': 'Coopérative agricole, Sénégal',
+                'footer.about': 'La première plateforme SIRH conçue pour les travailleurs ruraux d\'Afrique.',
+                'footer.product': 'Produit',
+                'footer.features': 'Fonctionnalités',
+                'footer.pricing': 'Tarifs',
+                'footer.demo': 'Démo',
+                'footer.company': 'Entreprise',
+                'footer.about2': 'À propos',
+                'footer.blog': 'Blog',
+                'footer.contact': 'Contact',
+                'footer.legal': 'Légal',
+                'footer.privacy': 'Confidentialité',
+                'footer.terms': 'Conditions',
+                'footer.security': 'Sécurité',
+                'footer.copyright': '© 2024 Socium Rural SIRH. Tous droits réservés.',
+                'auth.login.title': 'Connexion',
+                'auth.signup.title': 'Inscription',
+                'auth.login.tab': 'Connexion',
+                'auth.signup.tab': 'Inscription',
+                'auth.email': 'Email',
+                'auth.password': 'Mot de passe',
+                'auth.fullname': 'Nom complet',
+                'auth.login.submit': 'Se connecter',
+                'auth.signup.submit': 'Créer un compte',
+                'dashboard.title': 'Tableau de Bord',
+                'dashboard.live': 'Live',
+                'dashboard.logout': 'Déconnexion',
+                'dashboard.kpi.workers': 'Travailleurs actifs',
+                'dashboard.kpi.payroll': 'Paie mensuelle',
+                'dashboard.kpi.contracts': 'Contrats actifs',
+                'dashboard.kpi.pending': 'Paiements en attente',
+                'dashboard.workers.title': 'Travailleurs',
+                'dashboard.workers.add': '+ Ajouter',
+                'dashboard.workers.name': 'Nom',
+                'dashboard.workers.role': 'Fonction',
+                'dashboard.workers.rate': 'Tarif journalier',
+                'dashboard.workers.status': 'Statut',
+                'dashboard.chart.title': 'Paie mensuelle',
+                'dashboard.actions.payroll': 'Générer Paie',
+                'dashboard.actions.contract': 'Nouveau Contrat',
+                'dashboard.actions.ussd': 'Mode USSD',
+                'worker.modal.title': 'Ajouter un travailleur',
+                'worker.form.name': 'Nom complet',
+                'worker.form.phone': 'Téléphone',
+                'worker.form.role': 'Fonction',
+                'worker.form.rate': 'Tarif journalier',
+                'worker.form.currency': 'Devise',
+                'worker.form.nationalid': 'Numéro d\'identification (optionnel)',
+                'worker.form.submit': 'Ajouter le travailleur',
+                'contract.modal.title': 'Créer un nouveau contrat',
+                'contract.form.worker': 'Sélectionner un travailleur',
+                'contract.form.type': 'Type de contrat',
+                'contract.form.startdate': 'Date de début',
+                'contract.form.enddate': 'Date de fin (optionnel)',
+                'contract.form.terms': 'Conditions particulières (optionnel)',
+                'contract.form.submit': 'Générer le contrat PDF',
+                'chatbot.title': 'Assistant IA Socium',
+                'chatbot.welcome': 'Bonjour! Comment puis-je vous aider aujourd\'hui?',
+                'chatbot.q1': 'Comment ajouter un travailleur?',
+                'chatbot.q2': 'Comment générer la paie?',
+                'chatbot.q3': 'Quelles sont les cotisations?',
+                'chatbot.placeholder': 'Posez votre question...',
+                'chatbot.send': '→',
+                'status.active': 'Actif',
+                'status.pending': 'En attente',
+                'status.inactive': 'Inactif',
+                'toast.workerAdded': 'Travailleur ajouté avec succès',
+                'toast.error': 'Une erreur est survenue',
+                'toast.loginSuccess': 'Connexion réussie',
+                'toast.signupSuccess': 'Compte créé avec succès',
+            },
+            en: {
+                appName: 'Socium Rural',
+                'nav.features': 'Features',
+                'nav.how': 'How it works',
+                'nav.pricing': 'Pricing',
+                'nav.login': 'Login',
+                'nav.signup': 'Get Started',
+                'hero.badge': 'SMS · USSD · Voice compatible',
+                'hero.title': 'Formalize rural work. Simply.',
+                'hero.subtitle': 'Contracts, payroll and social contributions for every worker, even without a smartphone.',
+                'hero.cta1': 'Start for free',
+                'hero.cta2': 'See demo',
+                'ussd.menu': '*123# MENU\n\n1. View my contract\n2. Check salary\n3. Payment history\n4. Talk to agent',
+                'stats.workers': '12,000+',
+                'stats.workersLabel': 'Formalized workers',
+                'stats.rate': '98%',
+                'stats.rateLabel': 'Payment rate',
+                'stats.countries': '6',
+                'stats.countriesLabel': 'Countries covered',
+                'features.title': 'Features',
+                'features.subtitle': 'Everything you need to manage your rural teams',
+                'features.ai.title': 'Auto Payroll AI',
+                'features.ai.desc': 'Automatic calculation of wages and social contributions',
+                'features.contracts.title': 'Smart Contracts',
+                'features.contracts.desc': 'Automatic generation of compliant contracts',
+                'features.sms.title': 'SMS/USSD',
+                'features.sms.desc': 'Accessible without smartphone or internet',
+                'features.mobile.title': 'Mobile Money',
+                'features.mobile.desc': 'Instant payments via mobile money',
+                'features.social.title': 'Social Security',
+                'features.social.desc': 'Health, pension and accident contributions',
+                'features.dashboard.title': 'Dashboard',
+                'features.dashboard.desc': 'Real-time tracking of all your data',
+                'how.title': 'How it works',
+                'how.subtitle': 'In 4 simple steps',
+                'how.step1.title': 'Sign up',
+                'how.step1.desc': 'Create your free account',
+                'how.step2.title': 'Add workers',
+                'how.step2.desc': 'Register your employees',
+                'how.step3.title': 'Auto generation',
+                'how.step3.desc': 'AI creates contracts and payroll',
+                'how.step4.title': 'Payment',
+                'how.step4.desc': 'Pay via mobile money',
+                'pricing.title': 'Pricing',
+                'pricing.subtitle': 'Choose the plan that fits your needs',
+                'pricing.starter.tier': 'Starter',
+                'pricing.starter.price': 'Free',
+                'pricing.starter.period': 'Forever',
+                'pricing.starter.feat1': 'Up to 10 workers',
+                'pricing.starter.feat2': 'Basic contracts',
+                'pricing.starter.feat3': 'SMS payments',
+                'pricing.starter.feat4': 'Email support',
+                'pricing.pro.tier': 'Professional',
+                'pricing.pro.period': 'Per worker / month',
+                'pricing.pro.feat1': 'Unlimited workers',
+                'pricing.pro.feat2': 'Advanced AI contracts',
+                'pricing.pro.feat3': 'Mobile money',
+                'pricing.pro.feat4': 'Auto social contributions',
+                'pricing.pro.feat5': 'Priority support',
+                'pricing.enterprise.tier': 'Enterprise',
+                'pricing.enterprise.price': 'Custom',
+                'pricing.enterprise.period': 'High volume',
+                'pricing.enterprise.feat1': 'Custom API',
+                'pricing.enterprise.feat2': 'On-site training',
+                'pricing.enterprise.feat3': 'Multi-country',
+                'pricing.enterprise.feat4': 'Dedicated manager',
+                'pricing.enterprise.feat5': 'Guaranteed SLA',
+                'pricing.cta': 'Get Started',
+                'pricing.ctaContact': 'Contact us',
+                'testimonials.title': 'Testimonials',
+                'testimonials.subtitle': 'What our users say',
+                'testimonials.t1.text': '"Socium transformed our HR management. Before, it was chaos. Now everything is automated and my workers are paid on time."',
+                'testimonials.t1.name': 'Amadou Koné',
+                'testimonials.t1.role': 'Plantation owner, Ivory Coast',
+                'testimonials.t2.text': '"Finally a solution that understands our rural realities. The USSD system is great, my employees don\'t need a smartphone."',
+                'testimonials.t2.name': 'Fatou Ndiaye',
+                'testimonials.t2.role': 'Agricultural cooperative, Senegal',
+                'footer.about': 'The first HRIS platform designed for rural workers in Africa.',
+                'footer.product': 'Product',
+                'footer.features': 'Features',
+                'footer.pricing': 'Pricing',
+                'footer.demo': 'Demo',
+                'footer.company': 'Company',
+                'footer.about2': 'About',
+                'footer.blog': 'Blog',
+                'footer.contact': 'Contact',
+                'footer.legal': 'Legal',
+                'footer.privacy': 'Privacy',
+                'footer.terms': 'Terms',
+                'footer.security': 'Security',
+                'footer.copyright': '© 2024 Socium Rural SIRH. All rights reserved.',
+                'auth.login.title': 'Login',
+                'auth.signup.title': 'Sign Up',
+                'auth.login.tab': 'Login',
+                'auth.signup.tab': 'Sign Up',
+                'auth.email': 'Email',
+                'auth.password': 'Password',
+                'auth.fullname': 'Full name',
+                'auth.login.submit': 'Sign in',
+                'auth.signup.submit': 'Create account',
+                'dashboard.title': 'Dashboard',
+                'dashboard.live': 'Live',
+                'dashboard.logout': 'Logout',
+                'dashboard.kpi.workers': 'Active workers',
+                'dashboard.kpi.payroll': 'Monthly payroll',
+                'dashboard.kpi.contracts': 'Active contracts',
+                'dashboard.kpi.pending': 'Pending payments',
+                'dashboard.workers.title': 'Workers',
+                'dashboard.workers.add': '+ Add',
+                'dashboard.workers.name': 'Name',
+                'dashboard.workers.role': 'Role',
+                'dashboard.workers.rate': 'Daily rate',
+                'dashboard.workers.status': 'Status',
+                'dashboard.chart.title': 'Monthly payroll',
+                'dashboard.actions.payroll': 'Generate Payroll',
+                'dashboard.actions.contract': 'New Contract',
+                'dashboard.actions.ussd': 'USSD Mode',
+                'worker.modal.title': 'Add a worker',
+                'worker.form.name': 'Full name',
+                'worker.form.phone': 'Phone',
+                'worker.form.role': 'Role',
+                'worker.form.rate': 'Daily rate',
+                'worker.form.currency': 'Currency',
+                'worker.form.nationalid': 'National ID (optional)',
+                'worker.form.submit': 'Add worker',
+                'contract.modal.title': 'Create a new contract',
+                'contract.form.worker': 'Select a worker',
+                'contract.form.type': 'Contract type',
+                'contract.form.startdate': 'Start date',
+                'contract.form.enddate': 'End date (optional)',
+                'contract.form.terms': 'Special conditions (optional)',
+                'contract.form.submit': 'Generate PDF contract',
+                'chatbot.title': 'Socium AI Assistant',
+                'chatbot.welcome': 'Hello! How can I help you today?',
+                'chatbot.q1': 'How to add a worker?',
+                'chatbot.q2': 'How to generate payroll?',
+                'chatbot.q3': 'What are the contributions?',
+                'chatbot.placeholder': 'Ask your question...',
+                'chatbot.send': '→',
+                'status.active': 'Active',
+                'status.pending': 'Pending',
+                'status.inactive': 'Inactive',
+                'toast.workerAdded': 'Worker added successfully',
+                'toast.error': 'An error occurred',
+                'toast.loginSuccess': 'Login successful',
+                'toast.signupSuccess': 'Account created successfully',
+            },
+            sw: {
+                appName: 'Socium Rural',
+                'nav.features': 'Vipengele',
+                'nav.how': 'Jinsi inavyofanya kazi',
+                'nav.pricing': 'Bei',
+                'nav.login': 'Ingia',
+                'nav.signup': 'Anza',
+                'hero.badge': 'Inaunganishwa na SMS · USSD · Sauti',
+                'hero.title': 'Rasimisha kazi ya vijijini. Kwa urahisi.',
+                'hero.subtitle': 'Mikataba, mishahara na michango ya kijamii kwa kila mfanyakazi, hata bila simu mahiri.',
+                'hero.cta1': 'Anza bure',
+                'hero.cta2': 'Ona onyesho',
+                'ussd.menu': '*123# MENYU\n\n1. Angalia mkataba wangu\n2. Angalia mshahara\n3. Historia ya malipo\n4. Ongea na wakala',
+                'stats.workers': '12,000+',
+                'stats.workersLabel': 'Wafanyakazi waliorasimishwa',
+                'stats.rate': '98%',
+                'stats.rateLabel': 'Kiwango cha malipo',
+                'stats.countries': '6',
+                'stats.countriesLabel': 'Nchi zilizofunikwa',
+                'features.title': 'Vipengele',
+                'features.subtitle': 'Kila kitu unachohitaji kusimamia timu zako za vijijini',
+                'features.ai.title': 'AI ya Mishahara Otomatiki',
+                'features.ai.desc': 'Hesabu otomatiki ya mishahara na michango ya kijamii',
+                'features.contracts.title': 'Mikataba Mahiri',
+                'features.contracts.desc': 'Uundaji otomatiki wa mikataba inayofuata sheria',
+                'features.sms.title': 'SMS/USSD',
+                'features.sms.desc': 'Inafikiwa bila simu mahiri au mtandao',
+                'features.mobile.title': 'Pesa za Simu',
+                'features.mobile.desc': 'Malipo ya papo hapo kupitia pesa za simu',
+                'features.social.title': 'Usalama wa Kijamii',
+                'features.social.desc': 'Michango ya afya, pensheni na ajali',
+                'features.dashboard.title': 'Dashibodi',
+                'features.dashboard.desc': 'Ufuatiliaji wa wakati halisi wa data yako yote',
+                'how.title': 'Jinsi inavyofanya kazi',
+                'how.subtitle': 'Katika hatua 4 rahisi',
+                'how.step1.title': 'Jisajili',
+                'how.step1.desc': 'Unda akaunti yako bure',
+                'how.step2.title': 'Ongeza wafanyakazi',
+                'how.step2.desc': 'Sajili waajiri wako',
+                'how.step3.title': 'Uundaji otomatiki',
+                'how.step3.desc': 'AI inaunda mikataba na mishahara',
+                'how.step4.title': 'Malipo',
+                'how.step4.desc': 'Lipa kupitia pesa za simu',
+                'pricing.title': 'Bei',
+                'pricing.subtitle': 'Chagua mpango unaofaa mahitaji yako',
+                'pricing.starter.tier': 'Kuanza',
+                'pricing.starter.price': 'Bure',
+                'pricing.starter.period': 'Milele',
+                'pricing.starter.feat1': 'Hadi wafanyakazi 10',
+                'pricing.starter.feat2': 'Mikataba ya msingi',
+                'pricing.starter.feat3': 'Malipo ya SMS',
+                'pricing.starter.feat4': 'Msaada wa barua pepe',
+                'pricing.pro.tier': 'Kitaaluma',
+                'pricing.pro.period': 'Kwa mfanyakazi / mwezi',
+                'pricing.pro.feat1': 'Wafanyakazi wasio na kikomo',
+                'pricing.pro.feat2': 'Mikataba ya AI ya kiwango cha juu',
+                'pricing.pro.feat3': 'Pesa za simu',
+                'pricing.pro.feat4': 'Michango ya kijamii ya otomatiki',
+                'pricing.pro.feat5': 'Msaada wa kipaumbele',
+                'pricing.enterprise.tier': 'Biashara',
+                'pricing.enterprise.price': 'Maalum',
+                'pricing.enterprise.period': 'Kiasi kikubwa',
+                'pricing.enterprise.feat1': 'API maalum',
+                'pricing.enterprise.feat2': 'Mafunzo mahali',
+                'pricing.enterprise.feat3': 'Nchi nyingi',
+                'pricing.enterprise.feat4': 'Meneja aliyejitolea',
+                'pricing.enterprise.feat5': 'SLA iliyohakikishwa',
+                'pricing.cta': 'Anza',
+                'pricing.ctaContact': 'Wasiliana nasi',
+                'testimonials.title': 'Ushuhuda',
+                'testimonials.subtitle': 'Watumiaji wetu wanasema nini',
+                'testimonials.t1.text': '"Socium imebadilisha usimamizi wetu wa rasilimali watu. Kabla, kulikuwa ni machafuko. Sasa kila kitu ni otomatiki na wafanyakazi wangu wanalipwa kwa wakati."',
+                'testimonials.t1.name': 'Amadou Koné',
+                'testimonials.t1.role': 'Mmiliki wa shamba, Ivory Coast',
+                'testimonials.t2.text': '"Hatimaye suluhisho linaloelewa ukweli wetu wa vijijini. Mfumo wa USSD ni mzuri, waajiri wangu hawahitaji simu mahiri."',
+                'testimonials.t2.name': 'Fatou Ndiaye',
+                'testimonials.t2.role': 'Ushirika wa kilimo, Senegal',
+                'footer.about': 'Jukwaa la kwanza la HRIS lililoundwa kwa wafanyakazi wa vijijini Afrika.',
+                'footer.product': 'Bidhaa',
+                'footer.features': 'Vipengele',
+                'footer.pricing': 'Bei',
+                'footer.demo': 'Onyesho',
+                'footer.company': 'Kampuni',
+                'footer.about2': 'Kuhusu',
+                'footer.blog': 'Blogu',
+                'footer.contact': 'Mawasiliano',
+                'footer.legal': 'Kisheria',
+                'footer.privacy': 'Faragha',
+                'footer.terms': 'Masharti',
+                'footer.security': 'Usalama',
+                'footer.copyright': '© 2024 Socium Rural SIRH. Haki zote zimehifadhiwa.',
+                'auth.login.title': 'Ingia',
+                'auth.signup.title': 'Jisajili',
+                'auth.login.tab': 'Ingia',
+                'auth.signup.tab': 'Jisajili',
+                'auth.email': 'Barua pepe',
+                'auth.password': 'Neno la siri',
+                'auth.fullname': 'Jina kamili',
+                'auth.login.submit': 'Ingia',
+                'auth.signup.submit': 'Unda akaunti',
+                'dashboard.title': 'Dashibodi',
+                'dashboard.live': 'Moja kwa moja',
+                'dashboard.logout': 'Toka',
+                'dashboard.kpi.workers': 'Wafanyakazi hai',
+                'dashboard.kpi.payroll': 'Mishahara ya kila mwezi',
+                'dashboard.kpi.contracts': 'Mikataba hai',
+                'dashboard.kpi.pending': 'Malipo yanayosubiri',
+                'dashboard.workers.title': 'Wafanyakazi',
+                'dashboard.workers.add': '+ Ongeza',
+                'dashboard.workers.name': 'Jina',
+                'dashboard.workers.role': 'Wadhifa',
+                'dashboard.workers.rate': 'Kiwango cha kila siku',
+                'dashboard.workers.status': 'Hali',
+                'dashboard.chart.title': 'Mishahara ya kila mwezi',
+                'dashboard.actions.payroll': 'Tengeneza Mishahara',
+                'dashboard.actions.contract': 'Mkataba Mpya',
+                'dashboard.actions.ussd': 'Hali ya USSD',
+                'worker.modal.title': 'Ongeza mfanyakazi',
+                'worker.form.name': 'Jina kamili',
+                'worker.form.phone': 'Simu',
+                'worker.form.role': 'Wadhifa',
+                'worker.form.rate': 'Kiwango cha kila siku',
+                'worker.form.currency': 'Sarafu',
+                'worker.form.nationalid': 'Kitambulisho cha taifa (si lazima)',
+                'worker.form.submit': 'Ongeza mfanyakazi',
+                'contract.modal.title': 'Unda mkataba mpya',
+                'contract.form.worker': 'Chagua mfanyakazi',
+                'contract.form.type': 'Aina ya mkataba',
+                'contract.form.startdate': 'Tarehe ya kuanza',
+                'contract.form.enddate': 'Tarehe ya mwisho (si lazima)',
+                'contract.form.terms': 'Masharti maalum (si lazima)',
+                'contract.form.submit': 'Tengeneza mkataba wa PDF',
+                'chatbot.title': 'Msaidizi wa AI wa Socium',
+                'chatbot.welcome': 'Habari! Ninaweza kukusaidia vipi leo?',
+                'chatbot.q1': 'Jinsi ya kuongeza mfanyakazi?',
+                'chatbot.q2': 'Jinsi ya kutengeneza mishahara?',
+                'chatbot.q3': 'Michango ni nini?',
+                'chatbot.placeholder': 'Uliza swali lako...',
+                'chatbot.send': '→',
+                'status.active': 'Hai',
+                'status.pending': 'Inasubiri',
+                'status.inactive': 'Si hai',
+                'toast.workerAdded': 'Mfanyakazi ameongezwa kwa mafanikio',
+                'toast.error': 'Hitilafu imetokea',
+                'toast.loginSuccess': 'Uingiaji mafanikio',
+                'toast.signupSuccess': 'Akaunti imeundwa kwa mafanikio',
+            },
+            ha: {
+                appName: 'Socium Rural',
+                'nav.features': 'Abubuwa',
+                'nav.how': 'Yadda yake aiki',
+                'nav.pricing': 'Farashi',
+                'nav.login': 'Shiga',
+                'nav.signup': 'Fara',
+                'hero.badge': 'Mai dacewa da SMS · USSD · Murya',
+                'hero.title': 'Daidaita aikin karkara. Sauki.',
+                'hero.subtitle': 'Kwangiloli, albashi da gudunmawar zamantakewa ga kowane ma\'aikaci, ko da babu wayar hannu mai hankali.',
+                'hero.cta1': 'Fara kyauta',
+                'hero.cta2': 'Duba misali',
+                'ussd.menu': '*123# MENU\n\n1. Kalli kwangilolina\n2. Duba albashi\n3. Tarihin biyan kuɗi\n4. Yi magana da wakili',
+                'stats.workers': '12,000+',
+                'stats.workersLabel': 'Ma\'aikata da aka tsara',
+                'stats.rate': '98%',
+                'stats.rateLabel': 'Yawan biyan kuɗi',
+                'stats.countries': '6',
+                'stats.countriesLabel': 'Ƙasashen da aka rufe',
+                'features.title': 'Abubuwa',
+                'features.subtitle': 'Duk abin da kuke bukata don sarrafa ƙungiyoyin ku na karkara',
+                'features.ai.title': 'AI Mai Sarrafa Albashi',
+                'features.ai.desc': 'Ƙididdigar albashi da gudunmawar zamantakewa ta atomatik',
+                'features.contracts.title': 'Kwangiloli Masu Hankali',
+                'features.contracts.desc': 'Samar da kwangiloli masu bin doka ta atomatik',
+                'features.sms.title': 'SMS/USSD',
+                'features.sms.desc': 'Ana samun dama ba tare da wayar hannu mai hankali ko intanet ba',
+                'features.mobile.title': 'Kuɗin Wayar Hannu',
+                'features.mobile.desc': 'Biyan kuɗi nan take ta wayar hannu',
+                'features.social.title': 'Tsaron Zamantakewa',
+                'features.social.desc': 'Gudunmawar lafiya, fansho da hatsari',
+                'features.dashboard.title': 'Dashboard',
+                'features.dashboard.desc': 'Bin diddigin dukkan bayananku a lokaci guda',
+                'how.title': 'Yadda yake aiki',
+                'how.subtitle': 'A matakai 4 masu sauƙi',
+                'how.step1.title': 'Yi rajista',
+                'how.step1.desc': 'Ƙirƙiri asusunku kyauta',
+                'how.step2.title': 'Ƙara ma\'aikata',
+                'how.step2.desc': 'Yi rajistar ma\'aikatanku',
+                'how.step3.title': 'Samarwa ta atomatik',
+                'how.step3.desc': 'AI yana ƙirƙirar kwangiloli da albashi',
+                'how.step4.title': 'Biyan kuɗi',
+                'how.step4.desc': 'Biya ta hanyar kuɗin wayar hannu',
+                'pricing.title': 'Farashi',
+                'pricing.subtitle': 'Zaɓi shirin da ya dace da bukatunku',
+                'pricing.starter.tier': 'Farawa',
+                'pricing.starter.price': 'Kyauta',
+                'pricing.starter.period': 'Har abada',
+                'pricing.starter.feat1': 'Har zuwa ma\'aikata 10',
+                'pricing.starter.feat2': 'Kwangiloli na asali',
+                'pricing.starter.feat3': 'Biyan kuɗi ta SMS',
+                'pricing.starter.feat4': 'Tallafin imel',
+                'pricing.pro.tier': 'Ƙwararru',
+                'pricing.pro.period': 'Ga kowane ma\'aikaci / wata',
+                'pricing.pro.feat1': 'Ma\'aikata marasa iyaka',
+                'pricing.pro.feat2': 'Kwangilolin AI na gaba',
+                'pricing.pro.feat3': 'Kuɗin wayar hannu',
+                'pricing.pro.feat4': 'Gudunmawar zamantakewa ta atomatik',
+                'pricing.pro.feat5': 'Tallafi na farko',
+                'pricing.enterprise.tier': 'Kasuwanci',
+                'pricing.enterprise.price': 'Al\'ada',
+                'pricing.enterprise.period': 'Babban adadi',
+                'pricing.enterprise.feat1': 'API na musamman',
+                'pricing.enterprise.feat2': 'Horarwa a wurin',
+                'pricing.enterprise.feat3': 'Ƙasashe da yawa',
+                'pricing.enterprise.feat4': 'Manajan da aka keɓe',
+                'pricing.enterprise.feat5': 'SLA da aka tabbatar',
+                'pricing.cta': 'Fara',
+                'pricing.ctaContact': 'Tuntube mu',
+                'testimonials.title': 'Shaidun',
+                'testimonials.subtitle': 'Abin da masu amfani da mu ke cewa',
+                'testimonials.t1.text': '"Socium ya canza gudanar da harkokin ma\'aikatan mu. A baya, yana da hargitsi. Yanzu komai yana ta atomatik kuma ana biyan ma\'aikatana a lokaci."',
+                'testimonials.t1.name': 'Amadou Koné',
+                'testimonials.t1.role': 'Mai gona, Ivory Coast',
+                'testimonials.t2.text': '"A ƙarshe mafita da ke fahimtar gaskiyar mu ta karkara. Tsarin USSD yana da kyau, ma\'aikatana ba sa buƙatar wayar hannu mai hankali."',
+                'testimonials.t2.name': 'Fatou Ndiaye',
+                'testimonials.t2.role': 'Ƙungiyar noma, Senegal',
+                'footer.about': 'Farkon dandalin HRIS da aka ƙera don ma\'aikatan karkara a Afirka.',
+                'footer.product': 'Samfur',
+                'footer.features': 'Abubuwa',
+                'footer.pricing': 'Farashi',
+                'footer.demo': 'Misali',
+                'footer.company': 'Kamfani',
+                'footer.about2': 'Game da',
+                'footer.blog': 'Bulogi',
+                'footer.contact': 'Tuntuɓa',
+                'footer.legal': 'Doka',
+                'footer.privacy': 'Keɓantawa',
+                'footer.terms': 'Sharuɗɗa',
+                'footer.security': 'Tsaro',
+                'footer.copyright': '© 2024 Socium Rural SIRH. Dukkan haƙƙoƙin da aka kiyaye.',
+                'auth.login.title': 'Shiga',
+                'auth.signup.title': 'Yi rajista',
+                'auth.login.tab': 'Shiga',
+                'auth.signup.tab': 'Yi rajista',
+                'auth.email': 'Imel',
+                'auth.password': 'Kalmar sirri',
+                'auth.fullname': 'Cikakken suna',
+                'auth.login.submit': 'Shiga',
+                'auth.signup.submit': 'Ƙirƙiri asusu',
+                'dashboard.title': 'Dashboard',
+                'dashboard.live': 'Kai tsaye',
+                'dashboard.logout': 'Fita',
+                'dashboard.kpi.workers': 'Ma\'aikata masu aiki',
+                'dashboard.kpi.payroll': 'Albashi na wata-wata',
+                'dashboard.kpi.contracts': 'Kwangiloli masu aiki',
+                'dashboard.kpi.pending': 'Biyan kuɗi da ke jira',
+                'dashboard.workers.title': 'Ma\'aikata',
+                'dashboard.workers.add': '+ Ƙara',
+                'dashboard.workers.name': 'Suna',
+                'dashboard.workers.role': 'Aiki',
+                'dashboard.workers.rate': 'Farashin kowace rana',
+                'dashboard.workers.status': 'Matsayi',
+                'dashboard.chart.title': 'Albashi na wata-wata',
+                'dashboard.actions.payroll': 'Samar da Albashi',
+                'dashboard.actions.contract': 'Sabon Kwangila',
+                'dashboard.actions.ussd': 'Yanayin USSD',
+                'worker.modal.title': 'Ƙara ma\'aikaci',
+                'worker.form.name': 'Cikakken suna',
+                'worker.form.phone': 'Waya',
+                'worker.form.role': 'Aiki',
+                'worker.form.rate': 'Farashin kowace rana',
+                'worker.form.currency': 'Kuɗi',
+                'worker.form.nationalid': 'Lambar tantancewa ta ƙasa (ba dole ba)',
+                'worker.form.submit': 'Ƙara ma\'aikaci',
+                'contract.modal.title': 'Ƙirƙirar sabon kwangila',
+                'contract.form.worker': 'Zaɓi ma\'aikaci',
+                'contract.form.type': 'Nau\'in kwangila',
+                'contract.form.startdate': 'Ranar farawa',
+                'contract.form.enddate': 'Ranar ƙarshe (ba dole ba)',
+                'contract.form.terms': 'Sharuɗɗa na musamman (ba dole ba)',
+                'contract.form.submit': 'Samar da kwangilar PDF',
+                'chatbot.title': 'Mataimakin AI na Socium',
+                'chatbot.welcome': 'Sannu! Yaya zan iya taimaka ku yau?',
+                'chatbot.q1': 'Yadda za a ƙara ma\'aikaci?',
+                'chatbot.q2': 'Yadda za a samar da albashi?',
+                'chatbot.q3': 'Menene gudunmawoyin?',
+                'chatbot.placeholder': 'Tambayi tambayarku...',
+                'chatbot.send': '→',
+                'status.active': 'Mai aiki',
+                'status.pending': 'Yana jira',
+                'status.inactive': 'Ba mai aiki ba',
+                'toast.workerAdded': 'An ƙara ma\'aikaci cikin nasara',
+                'toast.error': 'An sami kuskure',
+                'toast.loginSuccess': 'An shiga cikin nasara',
+                'toast.signupSuccess': 'An ƙirƙiri asusu cikin nasara',
+            },
+            pt: {
+                appName: 'Socium Rural',
+                'nav.features': 'Recursos',
+                'nav.how': 'Como funciona',
+                'nav.pricing': 'Preços',
+                'nav.login': 'Entrar',
+                'nav.signup': 'Começar',
+                'hero.badge': 'Compatível com SMS · USSD · Voz',
+                'hero.title': 'Formalize o trabalho rural. Simplesmente.',
+                'hero.subtitle': 'Contratos, salários e contribuições sociais para cada trabalhador, mesmo sem smartphone.',
+                'hero.cta1': 'Começar gratuitamente',
+                'hero.cta2': 'Ver demonstração',
+                'ussd.menu': '*123# MENU\n\n1. Ver meu contrato\n2. Consultar salário\n3. Histórico de pagamentos\n4. Falar com agente',
+                'stats.workers': '12.000+',
+                'stats.workersLabel': 'Trabalhadores formalizados',
+                'stats.rate': '98%',
+                'stats.rateLabel': 'Taxa de pagamento',
+                'stats.countries': '6',
+                'stats.countriesLabel': 'Países cobertos',
+                'features.title': 'Recursos',
+                'features.subtitle': 'Tudo o que você precisa para gerenciar suas equipes rurais',
+                'features.ai.title': 'IA de Folha de Pagamento',
+                'features.ai.desc': 'Cálculo automático de salários e contribuições sociais',
+                'features.contracts.title': 'Contratos Inteligentes',
+                'features.contracts.desc': 'Geração automática de contratos em conformidade',
+                'features.sms.title': 'SMS/USSD',
+                'features.sms.desc': 'Acessível sem smartphone ou internet',
+                'features.mobile.title': 'Mobile Money',
+                'features.mobile.desc': 'Pagamentos instantâneos via mobile money',
+                'features.social.title': 'Segurança Social',
+                'features.social.desc': 'Contribuições de saúde, pensão e acidentes',
+                'features.dashboard.title': 'Painel de Controle',
+                'features.dashboard.desc': 'Acompanhamento em tempo real de todos os seus dados',
+                'how.title': 'Como funciona',
+                'how.subtitle': 'Em 4 passos simples',
+                'how.step1.title': 'Inscrição',
+                'how.step1.desc': 'Crie sua conta gratuitamente',
+                'how.step2.title': 'Adicionar trabalhadores',
+                'how.step2.desc': 'Registre seus funcionários',
+                'how.step3.title': 'Geração automática',
+                'how.step3.desc': 'A IA cria contratos e folhas de pagamento',
+                'how.step4.title': 'Pagamento',
+                'how.step4.desc': 'Pague via mobile money',
+                'pricing.title': 'Preços',
+                'pricing.subtitle': 'Escolha o plano adequado às suas necessidades',
+                'pricing.starter.tier': 'Inicial',
+                'pricing.starter.price': 'Grátis',
+                'pricing.starter.period': 'Para sempre',
+                'pricing.starter.feat1': 'Até 10 trabalhadores',
+                'pricing.starter.feat2': 'Contratos básicos',
+                'pricing.starter.feat3': 'Pagamentos SMS',
+                'pricing.starter.feat4': 'Suporte por email',
+                'pricing.pro.tier': 'Profissional',
+                'pricing.pro.period': 'Por trabalhador / mês',
+                'pricing.pro.feat1': 'Trabalhadores ilimitados',
+                'pricing.pro.feat2': 'Contratos IA avançados',
+                'pricing.pro.feat3': 'Mobile money',
+                'pricing.pro.feat4': 'Contribuições sociais automáticas',
+                'pricing.pro.feat5': 'Suporte prioritário',
+                'pricing.enterprise.tier': 'Empresarial',
+                'pricing.enterprise.price': 'Personalizado',
+                'pricing.enterprise.period': 'Alto volume',
+                'pricing.enterprise.feat1': 'API personalizada',
+                'pricing.enterprise.feat2': 'Treinamento no local',
+                'pricing.enterprise.feat3': 'Vários países',
+                'pricing.enterprise.feat4': 'Gerente dedicado',
+                'pricing.enterprise.feat5': 'SLA garantido',
+                'pricing.cta': 'Começar',
+                'pricing.ctaContact': 'Entre em contato',
+                'testimonials.title': 'Depoimentos',
+                'testimonials.subtitle': 'O que nossos usuários dizem',
+                'testimonials.t1.text': '"O Socium transformou nossa gestão de RH. Antes, era o caos. Agora tudo é automatizado e meus trabalhadores são pagos no prazo."',
+                'testimonials.t1.name': 'Amadou Koné',
+                'testimonials.t1.role': 'Proprietário de plantação, Costa do Marfim',
+                'testimonials.t2.text': '"Finalmente uma solução que entende nossas realidades rurais. O sistema USSD é ótimo, meus funcionários não precisam de smartphone."',
+                'testimonials.t2.name': 'Fatou Ndiaye',
+                'testimonials.t2.role': 'Cooperativa agrícola, Senegal',
+                'footer.about': 'A primeira plataforma SIRH projetada para trabalhadores rurais na África.',
+                'footer.product': 'Produto',
+                'footer.features': 'Recursos',
+                'footer.pricing': 'Preços',
+                'footer.demo': 'Demonstração',
+                'footer.company': 'Empresa',
+                'footer.about2': 'Sobre',
+                'footer.blog': 'Blog',
+                'footer.contact': 'Contato',
+                'footer.legal': 'Legal',
+                'footer.privacy': 'Privacidade',
+                'footer.terms': 'Termos',
+                'footer.security': 'Segurança',
+                'footer.copyright': '© 2024 Socium Rural SIRH. Todos os direitos reservados.',
+                'auth.login.title': 'Entrar',
+                'auth.signup.title': 'Inscrever-se',
+                'auth.login.tab': 'Entrar',
+                'auth.signup.tab': 'Inscrever-se',
+                'auth.email': 'Email',
+                'auth.password': 'Senha',
+                'auth.fullname': 'Nome completo',
+                'auth.login.submit': 'Entrar',
+                'auth.signup.submit': 'Criar conta',
+                'dashboard.title': 'Painel de Controle',
+                'dashboard.live': 'Ao vivo',
+                'dashboard.logout': 'Sair',
+                'dashboard.kpi.workers': 'Trabalhadores ativos',
+                'dashboard.kpi.payroll': 'Folha de pagamento mensal',
+                'dashboard.kpi.contracts': 'Contratos ativos',
+                'dashboard.kpi.pending': 'Pagamentos pendentes',
+                'dashboard.workers.title': 'Trabalhadores',
+                'dashboard.workers.add': '+ Adicionar',
+                'dashboard.workers.name': 'Nome',
+                'dashboard.workers.role': 'Função',
+                'dashboard.workers.rate': 'Diária',
+                'dashboard.workers.status': 'Status',
+                'dashboard.chart.title': 'Folha de pagamento mensal',
+                'dashboard.actions.payroll': 'Gerar Folha de Pagamento',
+                'dashboard.actions.contract': 'Novo Contrato',
+                'dashboard.actions.ussd': 'Modo USSD',
+                'worker.modal.title': 'Adicionar trabalhador',
+                'worker.form.name': 'Nome completo',
+                'worker.form.phone': 'Telefone',
+                'worker.form.role': 'Função',
+                'worker.form.rate': 'Diária',
+                'worker.form.currency': 'Moeda',
+                'worker.form.nationalid': 'Identificação nacional (opcional)',
+                'worker.form.submit': 'Adicionar trabalhador',
+                'contract.modal.title': 'Criar um novo contrato',
+                'contract.form.worker': 'Selecionar um trabalhador',
+                'contract.form.type': 'Tipo de contrato',
+                'contract.form.startdate': 'Data de início',
+                'contract.form.enddate': 'Data de término (opcional)',
+                'contract.form.terms': 'Condições especiais (opcional)',
+                'contract.form.submit': 'Gerar contrato PDF',
+                'chatbot.title': 'Assistente IA Socium',
+                'chatbot.welcome': 'Olá! Como posso ajudá-lo hoje?',
+                'chatbot.q1': 'Como adicionar um trabalhador?',
+                'chatbot.q2': 'Como gerar folha de pagamento?',
+                'chatbot.q3': 'Quais são as contribuições?',
+                'chatbot.placeholder': 'Faça sua pergunta...',
+                'chatbot.send': '→',
+                'status.active': 'Ativo',
+                'status.pending': 'Pendente',
+                'status.inactive': 'Inativo',
+                'toast.workerAdded': 'Trabalhador adicionado com sucesso',
+                'toast.error': 'Ocorreu um erro',
+                'toast.loginSuccess': 'Login bem-sucedido',
+                'toast.signupSuccess': 'Conta criada com sucesso',
+            }
+        };
+
+        function t(key) {
+            return TRANSLATIONS[currentLanguage][key] || TRANSLATIONS['fr'][key] || key;
+        }
+
+        function renderLanguage(lang) {
+            currentLanguage = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                    el.placeholder = t(key);
+                } else {
+                    el.textContent = t(key);
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                el.placeholder = t(key);
+            });
+
+            localStorage.setItem('preferredLanguage', lang);
+
+            if (currentUser) {
+                updateUserLanguagePreference(lang);
+            }
+
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-lang') === lang) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        async function updateUserLanguagePreference(lang) {
+            if (!currentUser) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('users')
+                    .update({ preferred_language: lang })
+                    .eq('id', currentUser.id);
+
+                if (error) throw error;
+            } catch (error) {
+                console.error('Error updating language preference:', error);
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toast.className = `toast ${type} active`;
+            toastMessage.textContent = message;
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 3000);
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        let isLoginMode = true;
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            isLoginMode = true;
+            updateAuthModal();
+            openModal('authModal');
+        });
+
+        document.getElementById('signupBtn').addEventListener('click', () => {
+            isLoginMode = false;
+            updateAuthModal();
+            openModal('authModal');
+        });
+
+        document.getElementById('ctaSignup').addEventListener('click', () => {
+            isLoginMode = false;
+            updateAuthModal();
+            openModal('authModal');
+        });
+
+        document.getElementById('loginTab').addEventListener('click', () => {
+            isLoginMode = true;
+            updateAuthModal();
+        });
+
+        document.getElementById('signupTab').addEventListener('click', () => {
+            isLoginMode = false;
+            updateAuthModal();
+        });
+
+        function updateAuthModal() {
+            const title = document.getElementById('authModalTitle');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const fullNameGroup = document.getElementById('fullNameGroup');
+            const loginTab = document.getElementById('loginTab');
+            const signupTab = document.getElementById('signupTab');
+
+            if (isLoginMode) {
+                title.textContent = t('auth.login.title');
+                submitBtn.textContent = t('auth.login.submit');
+                fullNameGroup.style.display = 'none';
+                loginTab.classList.add('active');
+                signupTab.classList.remove('active');
+            } else {
+                title.textContent = t('auth.signup.title');
+                submitBtn.textContent = t('auth.signup.submit');
+                fullNameGroup.style.display = 'block';
+                loginTab.classList.remove('active');
+                signupTab.classList.add('active');
+            }
+        }
+
+        document.getElementById('closeAuthModal').addEventListener('click', () => {
+            closeModal('authModal');
+        });
+
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const fullName = document.getElementById('authFullName').value;
+
+            try {
+                if (isLoginMode) {
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+
+                    if (error) throw error;
+
+                    closeModal('authModal');
+                    showToast(t('toast.loginSuccess'), 'success');
+                    await loadDashboard();
+                } else {
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email,
+                        password
+                    });
+
+                    if (error) throw error;
+
+                    const { error: profileError } = await supabaseClient
+                        .from('users')
+                        .insert({
+                            id: data.user.id,
+                            email,
+                            full_name: fullName,
+                            role: 'employer',
+                            preferred_language: currentLanguage
+                        });
+
+                    if (profileError) throw profileError;
+
+                    closeModal('authModal');
+                    showToast(t('toast.signupSuccess'), 'success');
+                    await loadDashboard();
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+                showToast(error.message, 'error');
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            currentUser = null;
+            document.getElementById('landingView').classList.remove('hidden');
+            document.getElementById('dashboardView').classList.remove('active');
+            if (workersSubscription) {
+                workersSubscription.unsubscribe();
+                workersSubscription = null;
+            }
+        });
+
+        async function loadDashboard() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) return;
+
+            const { data: profile } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            if (profile) {
+                currentUser = profile;
+                if (profile.preferred_language) {
+                    renderLanguage(profile.preferred_language);
+                }
+                document.getElementById('userNameDisplay').textContent = profile.full_name;
+            }
+
+            document.getElementById('landingView').classList.add('hidden');
+            document.getElementById('dashboardView').classList.add('active');
+
+            await loadKPIs();
+            await loadWorkers();
+            await loadPayrollChart();
+            setupRealtimeSubscriptions();
+            startKPIRefresh();
+        }
+
+        async function loadKPIs() {
+            if (!currentUser) return;
+
+            try {
+                const { data: workers } = await supabaseClient
+                    .from('workers')
+                    .select('*')
+                    .eq('employer_id', currentUser.id);
+
+                const activeWorkers = workers?.filter(w => w.status === 'active').length || 0;
+                document.getElementById('kpiWorkers').textContent = activeWorkers;
+
+                const now = new Date();
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+                const { data: payroll } = await supabaseClient
+                    .from('payroll')
+                    .select('net_amount, currency')
+                    .eq('employer_id', currentUser.id)
+                    .gte('period_start', firstDay.toISOString())
+                    .lte('period_end', lastDay.toISOString());
+
+                const totalPayroll = payroll?.reduce((sum, p) => sum + parseFloat(p.net_amount), 0) || 0;
+                const currency = payroll?.[0]?.currency || 'XOF';
+                document.getElementById('kpiPayroll').textContent = `${Math.round(totalPayroll)} ${currency}`;
+
+                const { data: contracts, count: contractsCount } = await supabaseClient
+                    .from('contracts')
+                    .select('*', { count: 'exact' })
+                    .eq('employer_id', currentUser.id)
+                    .eq('status', 'active');
+
+                document.getElementById('kpiContracts').textContent = contractsCount || 0;
+
+                const { data: pendingPayments, count: pendingCount } = await supabaseClient
+                    .from('payroll')
+                    .select('*', { count: 'exact' })
+                    .eq('employer_id', currentUser.id)
+                    .eq('payment_status', 'pending');
+
+                document.getElementById('kpiPending').textContent = pendingCount || 0;
+            } catch (error) {
+                console.error('Error loading KPIs:', error);
+            }
+        }
+
+        async function loadWorkers() {
+            if (!currentUser) return;
+
+            try {
+                const { data: workers } = await supabaseClient
+                    .from('workers')
+                    .select('*')
+                    .eq('employer_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+
+                const tbody = document.getElementById('workersTableBody');
+
+                if (!workers || workers.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 40px;">
+                                <div class="empty-state">
+                                    <p>${t('dashboard.workers.empty') || 'Aucun travailleur ajouté'}</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = workers.map(worker => `
+                    <tr>
+                        <td>${worker.full_name}</td>
+                        <td>${worker.role_title}</td>
+                        <td>${worker.daily_rate} ${worker.currency}</td>
+                        <td>
+                            <span class="status-badge ${worker.status}">
+                                <span class="status-dot"></span>
+                                ${t(`status.${worker.status}`)}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading workers:', error);
+            }
+        }
+
+        async function loadPayrollChart() {
+            if (!currentUser) return;
+
+            try {
+                const now = new Date();
+                const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+                const { data: payroll } = await supabaseClient
+                    .from('payroll')
+                    .select('period_start, net_amount')
+                    .eq('employer_id', currentUser.id)
+                    .gte('period_start', sixMonthsAgo.toISOString())
+                    .order('period_start', { ascending: true });
+
+                const monthlyTotals = {};
+                payroll?.forEach(p => {
+                    const month = new Date(p.period_start).toISOString().slice(0, 7);
+                    monthlyTotals[month] = (monthlyTotals[month] || 0) + parseFloat(p.net_amount);
+                });
+
+                drawChart(monthlyTotals);
+            } catch (error) {
+                console.error('Error loading payroll chart:', error);
+            }
+        }
+
+        function drawChart(data) {
+            const svg = document.getElementById('payrollChart');
+            svg.innerHTML = '';
+
+            const months = Object.keys(data);
+            if (months.length === 0) {
+                svg.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#ccc">No data</text>';
+                return;
+            }
+
+            const values = Object.values(data);
+            const maxValue = Math.max(...values);
+            const barWidth = 280 / months.length;
+            const chartHeight = 250;
+            const bottomPadding = 40;
+
+            months.forEach((month, i) => {
+                const barHeight = (values[i] / maxValue) * (chartHeight - bottomPadding);
+                const x = i * barWidth + 10;
+                const y = chartHeight - barHeight - bottomPadding + 10;
+
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', x);
+                rect.setAttribute('y', y);
+                rect.setAttribute('width', barWidth - 5);
+                rect.setAttribute('height', barHeight);
+                rect.setAttribute('fill', '#C1440E');
+                rect.setAttribute('rx', '4');
+                svg.appendChild(rect);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x + (barWidth - 5) / 2);
+                text.setAttribute('y', chartHeight - bottomPadding + 25);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('font-size', '10');
+                text.setAttribute('fill', '#1C1C1C');
+                text.textContent = month.slice(5);
+                svg.appendChild(text);
+            });
+        }
+
+        function setupRealtimeSubscriptions() {
+            if (!currentUser) return;
+
+            workersSubscription = supabaseClient
+                .channel('workers_changes')
+                .on('postgres_changes',
+                    {
+                        event: '*',
+                        schema: 'public',
+                        table: 'workers',
+                        filter: `employer_id=eq.${currentUser.id}`
+                    },
+                    () => {
+                        loadWorkers();
+                        loadKPIs();
+                    }
+                )
+                .subscribe();
+        }
+
+        let kpiRefreshInterval;
+        function startKPIRefresh() {
+            kpiRefreshInterval = setInterval(() => {
+                loadKPIs();
+            }, 30000);
+        }
+
+        document.getElementById('addWorkerBtn').addEventListener('click', () => {
+            openModal('workerModal');
+        });
+
+        document.getElementById('closeWorkerModal').addEventListener('click', () => {
+            closeModal('workerModal');
+        });
+
+        document.getElementById('workerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!currentUser) return;
+
+            const workerData = {
+                employer_id: currentUser.id,
+                full_name: document.getElementById('workerName').value,
+                phone: document.getElementById('workerPhone').value,
+                role_title: document.getElementById('workerRole').value,
+                daily_rate: parseFloat(document.getElementById('workerRate').value),
+                currency: document.getElementById('workerCurrency').value,
+                national_id: document.getElementById('workerNationalId').value || null,
+                status: 'active'
+            };
+
+            try {
+                const { error } = await supabaseClient
+                    .from('workers')
+                    .insert(workerData);
+
+                if (error) throw error;
+
+                closeModal('workerModal');
+                showToast(t('toast.workerAdded'), 'success');
+                document.getElementById('workerForm').reset();
+
+                await loadWorkers();
+                await loadKPIs();
+            } catch (error) {
+                console.error('Error adding worker:', error);
+                showToast(t('toast.error'), 'error');
+            }
+        });
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.getAttribute('data-lang');
+                renderLanguage(lang);
+            });
+        });
+
+        document.getElementById('chatbotFab').addEventListener('click', () => {
+            const window = document.getElementById('chatbotWindow');
+            window.classList.toggle('active');
+        });
+
+        document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        });
+
+        document.querySelectorAll('.quick-question').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('chatInput').value = btn.textContent;
+                sendChatMessage();
+            });
+        });
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const messagesContainer = document.getElementById('chatbotMessages');
+
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-message user';
+            userMsg.textContent = message;
+            messagesContainer.appendChild(userMsg);
+
+            input.value = '';
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            const aiResponse = getSimulatedAIResponse(message);
+
+            const aiMsg = document.createElement('div');
+            aiMsg.className = 'chat-message ai';
+            aiMsg.textContent = aiResponse;
+            messagesContainer.appendChild(aiMsg);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            if (currentUser) {
+                try {
+                    await supabaseClient
+                        .from('chat_logs')
+                        .insert({
+                            user_id: currentUser.id,
+                            language: currentLanguage,
+                            user_message: message,
+                            ai_response: aiResponse
+                        });
+                } catch (error) {
+                    console.error('Error logging chat:', error);
+                }
+            }
+        }
+
+        function getSimulatedAIResponse(message) {
+            const responses = {
+                fr: {
+                    'comment ajouter un travailleur': 'Cliquez sur le bouton "+ Ajouter" dans la section Travailleurs, puis remplissez le formulaire avec les informations du travailleur.',
+                    'comment générer la paie': 'Utilisez le bouton "Générer Paie" sur le tableau de bord. Le système calculera automatiquement les salaires et cotisations.',
+                    'quelles sont les cotisations': 'Les cotisations sociales incluent : santé (5%), retraite (8%), et accidents du travail (2%).',
+                    'default': 'Je suis là pour vous aider avec la gestion de vos travailleurs, la génération de paie, et les cotisations sociales. Posez-moi une question spécifique!'
+                },
+                en: {
+                    'how to add a worker': 'Click the "+ Add" button in the Workers section, then fill out the form with worker information.',
+                    'how to generate payroll': 'Use the "Generate Payroll" button on the dashboard. The system will automatically calculate wages and contributions.',
+                    'what are the contributions': 'Social contributions include: health (5%), pension (8%), and work accidents (2%).',
+                    'default': 'I\'m here to help with managing your workers, generating payroll, and social contributions. Ask me a specific question!'
+                }
+            };
+
+            const langResponses = responses[currentLanguage] || responses.fr;
+            const normalizedMessage = message.toLowerCase();
+
+            for (const [key, response] of Object.entries(langResponses)) {
+                if (normalizedMessage.includes(key)) {
+                    return response;
+                }
+            }
+
+            return langResponses.default;
+        }
+
+        const hamburger = document.getElementById('hamburger');
+        const navMenu = document.getElementById('navMenu');
+
+        hamburger.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        document.getElementById('toggleUssdBtn').addEventListener('click', () => {
+            const ussdScreen = document.getElementById('ussdScreen');
+            const currentText = ussdScreen.getAttribute('data-i18n');
+
+            if (currentText === 'ussd.menu') {
+                ussdScreen.setAttribute('data-i18n', 'ussd.response');
+                ussdScreen.textContent = t('ussd.response') || '*123#\n\nSalaire: 45,000 XOF\nDernier paiement: 15/03/2024\n\n0. Retour';
+            } else {
+                ussdScreen.setAttribute('data-i18n', 'ussd.menu');
+                renderLanguage(currentLanguage);
+            }
+        });
+
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                loadDashboard();
+            } else if (event === 'SIGNED_OUT') {
+                document.getElementById('landingView').classList.remove('hidden');
+                document.getElementById('dashboardView').classList.remove('active');
+            }
+        });
+
+        (async () => {
+            const savedLang = localStorage.getItem('preferredLanguage');
+            if (savedLang) {
+                renderLanguage(savedLang);
+            }
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                await loadDashboard();
+            }
+        })();
+
+        document.getElementById('generatePayrollBtn').addEventListener('click', () => {
+            showToast('Fonctionnalité de génération de paie à venir', 'success');
+        });
+
+        document.getElementById('newContractBtn').addEventListener('click', async () => {
+            if (!currentUser) {
+                showToast('Veuillez vous connecter', 'error');
+                return;
+            }
+
+            try {
+                const { data: workers } = await supabaseClient
+                    .from('workers')
+                    .select('*')
+                    .eq('employer_id', currentUser.id)
+                    .eq('status', 'active')
+                    .order('full_name', { ascending: true });
+
+                const workerSelect = document.getElementById('contractWorker');
+                workerSelect.innerHTML = '<option value="">-- Choisir --</option>';
+
+                if (workers && workers.length > 0) {
+                    workers.forEach(worker => {
+                        const option = document.createElement('option');
+                        option.value = worker.id;
+                        option.textContent = `${worker.full_name} - ${worker.role_title}`;
+                        option.dataset.worker = JSON.stringify(worker);
+                        workerSelect.appendChild(option);
+                    });
+                    openModal('contractModal');
+                } else {
+                    showToast('Veuillez d\'abord ajouter des travailleurs', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading workers:', error);
+                showToast('Erreur lors du chargement des travailleurs', 'error');
+            }
+        });
+
+        document.getElementById('closeContractModal').addEventListener('click', () => {
+            closeModal('contractModal');
+        });
+
+        document.getElementById('contractForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!currentUser) return;
+
+            const workerSelect = document.getElementById('contractWorker');
+            const selectedOption = workerSelect.options[workerSelect.selectedIndex];
+
+            if (!selectedOption.value) {
+                showToast('Veuillez sélectionner un travailleur', 'error');
+                return;
+            }
+
+            const worker = JSON.parse(selectedOption.dataset.worker);
+            const contractType = document.getElementById('contractType').value;
+            const startDate = document.getElementById('contractStartDate').value;
+            const endDate = document.getElementById('contractEndDate').value;
+            const terms = document.getElementById('contractTerms').value;
+
+            try {
+                const contractData = {
+                    worker_id: worker.id,
+                    employer_id: currentUser.id,
+                    contract_type: contractType,
+                    start_date: startDate,
+                    end_date: endDate || null,
+                    terms_json: {
+                        terms: terms,
+                        daily_rate: worker.daily_rate,
+                        currency: worker.currency
+                    },
+                    status: 'active',
+                    generated_by_ai: true
+                };
+
+                const { data: contract, error } = await supabaseClient
+                    .from('contracts')
+                    .insert(contractData)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+
+                generateContractPDF(worker, contract, currentUser);
+
+                closeModal('contractModal');
+                document.getElementById('contractForm').reset();
+                showToast('Contrat généré et enregistré avec succès!', 'success');
+                loadKPIs();
+            } catch (error) {
+                console.error('Error creating contract:', error);
+                showToast('Erreur lors de la création du contrat', 'error');
+            }
+        });
+
+        function generateContractPDF(worker, contract, employer) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const primaryColor = [193, 68, 14];
+            const textColor = [28, 28, 28];
+            const lightColor = [242, 212, 162];
+
+            doc.setFillColor(...lightColor);
+            doc.rect(0, 0, 210, 40, 'F');
+
+            doc.setFontSize(24);
+            doc.setTextColor(...primaryColor);
+            doc.setFont(undefined, 'bold');
+            doc.text('CONTRAT DE TRAVAIL', 105, 20, { align: 'center' });
+
+            doc.setFontSize(12);
+            doc.setTextColor(...textColor);
+            doc.setFont(undefined, 'normal');
+            doc.text('Socium Rural SIRH', 105, 30, { align: 'center' });
+
+            let yPos = 55;
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Référence: ${contract.id.substring(0, 8).toUpperCase()}`, 20, yPos);
+            doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 150, yPos);
+
+            yPos += 15;
+
+            doc.setFontSize(14);
+            doc.setTextColor(...primaryColor);
+            doc.setFont(undefined, 'bold');
+            doc.text('ENTRE LES SOUSSIGNÉS :', 20, yPos);
+
+            yPos += 10;
+
+            doc.setFontSize(11);
+            doc.setTextColor(...textColor);
+            doc.setFont(undefined, 'bold');
+            doc.text('L\'EMPLOYEUR :', 20, yPos);
+            yPos += 7;
+            doc.setFont(undefined, 'normal');
+            doc.text(`Nom: ${employer.full_name}`, 25, yPos);
+            yPos += 6;
+            doc.text(`Email: ${employer.email}`, 25, yPos);
+
+            yPos += 12;
+
+            doc.setFont(undefined, 'bold');
+            doc.text('ET LE TRAVAILLEUR :', 20, yPos);
+            yPos += 7;
+            doc.setFont(undefined, 'normal');
+            doc.text(`Nom: ${worker.full_name}`, 25, yPos);
+            yPos += 6;
+            doc.text(`Fonction: ${worker.role_title}`, 25, yPos);
+            yPos += 6;
+            doc.text(`Téléphone: ${worker.phone}`, 25, yPos);
+            if (worker.national_id) {
+                yPos += 6;
+                doc.text(`ID National: ${worker.national_id}`, 25, yPos);
+            }
+
+            yPos += 15;
+
+            doc.setFontSize(14);
+            doc.setTextColor(...primaryColor);
+            doc.setFont(undefined, 'bold');
+            doc.text('CONDITIONS DU CONTRAT', 20, yPos);
+
+            yPos += 10;
+
+            doc.setFontSize(11);
+            doc.setTextColor(...textColor);
+            doc.setFont(undefined, 'bold');
+            doc.text('Article 1 - Type de contrat', 20, yPos);
+            yPos += 7;
+            doc.setFont(undefined, 'normal');
+            const contractTypes = {
+                'daily': 'Contrat journalier',
+                'monthly': 'Contrat mensuel',
+                'seasonal': 'Contrat saisonnier'
+            };
+            doc.text(`Type: ${contractTypes[contract.contract_type]}`, 25, yPos);
+
+            yPos += 10;
+            doc.setFont(undefined, 'bold');
+            doc.text('Article 2 - Durée du contrat', 20, yPos);
+            yPos += 7;
+            doc.setFont(undefined, 'normal');
+            doc.text(`Date de début: ${new Date(contract.start_date).toLocaleDateString('fr-FR')}`, 25, yPos);
+            if (contract.end_date) {
+                yPos += 6;
+                doc.text(`Date de fin: ${new Date(contract.end_date).toLocaleDateString('fr-FR')}`, 25, yPos);
+            } else {
+                yPos += 6;
+                doc.text('Durée: Indéterminée', 25, yPos);
+            }
+
+            yPos += 10;
+            doc.setFont(undefined, 'bold');
+            doc.text('Article 3 - Rémunération', 20, yPos);
+            yPos += 7;
+            doc.setFont(undefined, 'normal');
+            doc.text(`Tarif journalier: ${worker.daily_rate} ${worker.currency}`, 25, yPos);
+            yPos += 6;
+            doc.text('Paiement: Via mobile money ou espèces', 25, yPos);
+
+            yPos += 10;
+            doc.setFont(undefined, 'bold');
+            doc.text('Article 4 - Cotisations sociales', 20, yPos);
+            yPos += 7;
+            doc.setFont(undefined, 'normal');
+            doc.text('L\'employeur s\'engage à verser les cotisations suivantes:', 25, yPos);
+            yPos += 6;
+            doc.text('- Santé: 5% du salaire brut', 30, yPos);
+            yPos += 5;
+            doc.text('- Retraite: 8% du salaire brut', 30, yPos);
+            yPos += 5;
+            doc.text('- Accidents du travail: 2% du salaire brut', 30, yPos);
+
+            if (contract.terms_json?.terms) {
+                yPos += 10;
+                doc.setFont(undefined, 'bold');
+                doc.text('Article 5 - Conditions particulières', 20, yPos);
+                yPos += 7;
+                doc.setFont(undefined, 'normal');
+                const terms = contract.terms_json.terms;
+                const splitTerms = doc.splitTextToSize(terms, 170);
+                doc.text(splitTerms, 25, yPos);
+                yPos += splitTerms.length * 5;
+            }
+
+            if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+            }
+
+            yPos += 15;
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text('Le présent contrat a été établi en deux exemplaires, dont un pour chaque partie.', 20, yPos);
+            yPos += 5;
+            doc.text('Chacune des parties reconnaît avoir pris connaissance de l\'ensemble des dispositions ci-dessus.', 20, yPos);
+
+            yPos += 20;
+            doc.setFontSize(10);
+            doc.setTextColor(...textColor);
+            doc.text('Fait à _________________, le __________________', 20, yPos);
+
+            yPos += 20;
+            doc.text('Signature de l\'employeur:', 20, yPos);
+            doc.text('Signature du travailleur:', 120, yPos);
+
+            doc.setDrawColor(...primaryColor);
+            doc.setLineWidth(0.5);
+            doc.line(20, 280, 90, 280);
+            doc.line(120, 280, 190, 280);
+
+            doc.setFontSize(8);
+            doc.setTextColor(150, 150, 150);
+            doc.text('Document généré par Socium Rural SIRH - www.sociumrural.com', 105, 290, { align: 'center' });
+
+            const fileName = `Contrat_${worker.full_name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+        }
+    </script>
+</body>
+</html>
+
+<!--
+SQL SCHEMA FOR SUPABASE
+Copy and paste this into your Supabase SQL Editor:
+
+This schema has already been created via migration!
+Check the migration file: create_socium_rural_sirh_schema.sql
+
+To view your tables, go to:
+https://app.supabase.com/project/_/editor
+
+Don't forget to replace SUPABASE_URL and SUPABASE_ANON_KEY above!
+-->

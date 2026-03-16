@@ -1558,10 +1558,11 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 32px; display: flex; gap: 16px;">
+                <div style="margin-top: 32px; display: flex; gap: 16px; flex-wrap: wrap;">
                     <button class="btn btn-success" id="generatePayrollBtn" data-i18n="dashboard.actions.payroll">Générer Paie</button>
                     <button class="btn btn-primary" id="newContractBtn" data-i18n="dashboard.actions.contract">Nouveau Contrat</button>
                     <button class="btn btn-secondary" id="toggleUssdBtn" data-i18n="dashboard.actions.ussd">Mode USSD</button>
+                    <button class="btn btn-primary" id="workerAppBtn" style="background: linear-gradient(135deg, var(--terracotta) 0%, #8B2F0A 100%); border: none;" data-i18n="dashboard.actions.workerapp">🌾 Espace Employés</button>
                 </div>
             </div>
         </section>
@@ -1906,6 +1907,7 @@
                 'dashboard.actions.payroll': 'Générer Paie',
                 'dashboard.actions.contract': 'Nouveau Contrat',
                 'dashboard.actions.ussd': 'Mode USSD',
+                'dashboard.actions.workerapp': '🌾 Espace Employés',
                 'worker.modal.title': 'Ajouter un travailleur',
                 'worker.form.name': 'Nom complet',
                 'worker.form.phone': 'Téléphone',
@@ -2061,6 +2063,7 @@
                 'dashboard.actions.payroll': 'Generate Payroll',
                 'dashboard.actions.contract': 'New Contract',
                 'dashboard.actions.ussd': 'USSD Mode',
+                'dashboard.actions.workerapp': '🌾 Employee Portal',
                 'worker.modal.title': 'Add a worker',
                 'worker.form.name': 'Full name',
                 'worker.form.phone': 'Phone',
@@ -2216,6 +2219,7 @@
                 'dashboard.actions.payroll': 'Tengeneza Mishahara',
                 'dashboard.actions.contract': 'Mkataba Mpya',
                 'dashboard.actions.ussd': 'Hali ya USSD',
+                'dashboard.actions.workerapp': '🌾 Ukurasa wa Wafanyakazi',
                 'worker.modal.title': 'Ongeza mfanyakazi',
                 'worker.form.name': 'Jina kamili',
                 'worker.form.phone': 'Simu',
@@ -2371,6 +2375,7 @@
                 'dashboard.actions.payroll': 'Samar da Albashi',
                 'dashboard.actions.contract': 'Sabon Kwangila',
                 'dashboard.actions.ussd': 'Yanayin USSD',
+                'dashboard.actions.workerapp': '🌾 Portal na Ma\'aikata',
                 'worker.modal.title': 'Ƙara ma\'aikaci',
                 'worker.form.name': 'Cikakken suna',
                 'worker.form.phone': 'Waya',
@@ -2526,6 +2531,7 @@
                 'dashboard.actions.payroll': 'Gerar Folha de Pagamento',
                 'dashboard.actions.contract': 'Novo Contrato',
                 'dashboard.actions.ussd': 'Modo USSD',
+                'dashboard.actions.workerapp': '🌾 Portal de Funcionários',
                 'worker.modal.title': 'Adicionar trabalhador',
                 'worker.form.name': 'Nome completo',
                 'worker.form.phone': 'Telefone',
@@ -2747,6 +2753,10 @@
                 workersSubscription.unsubscribe();
                 workersSubscription = null;
             }
+        });
+
+        document.getElementById('workerAppBtn').addEventListener('click', () => {
+            window.open('/worker.html', '_blank');
         });
 
         async function loadDashboard() {

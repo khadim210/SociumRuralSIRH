@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#C1440E">
+    <meta name="description" content="Socium Worker - Interface pour travailleurs ruraux">
+    <title>Socium Worker</title>
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --terracotta: #C1440E;
+            --terracotta-dark: #8B2F0A;
+            --sand: #F2D49E;
+            --sand-light: #FFF5E6;
+            --clay: #A0826D;
+            --earth: #8B6F47;
+            --text-dark: #1C1C1C;
+            --success: #059669;
+            --error: #DC2626;
+            --warning: #F59E0B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--sand-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .screen {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .splash-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--terracotta) 0%, var(--terracotta-dark) 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 64px;
+            margin-bottom: 24px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .splash-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .splash-subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 48px;
+        }
+
+        .language-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .lang-btn {
+            padding: 16px 24px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .lang-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .lang-flag {
+            font-size: 28px;
+        }
+
+        .auth-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 60px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-icon {
+            font-size: 72px;
+            margin-bottom: 16px;
+        }
+
+        .auth-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--terracotta);
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            font-size: 16px;
+            color: var(--clay);
+        }
+
+        .voice-prompt {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .voice-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            animation: voicePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes voicePulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .voice-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .voice-subtext {
+            font-size: 14px;
+            color: var(--clay);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+
+        .input-icon {
+            font-size: 20px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--sand);
+            border-radius: 12px;
+            font-size: 18px;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--terracotta);
+            box-shadow: 0 0 0 3px rgba(193, 68, 14, 0.1);
+        }
+
+        .input-field.large {
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 8px;
+            font-weight: 700;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn-primary {
+            background: var(--terracotta);
+            color: white;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            background: var(--terracotta-dark);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--terracotta);
+            border: 2px solid var(--terracotta);
+        }
+
+        .btn-voice {
+            background: white;
+            color: var(--terracotta);
+            border: 2px solid var(--terracotta);
+            margin-bottom: 16px;
+        }
+
+        .btn-voice.listening {
+            background: var(--terracotta);
+            color: white;
+            animation: voicePulse 1.5s ease-in-out infinite;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 24px 0;
+            color: var(--clay);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--sand);
+        }
+
+        .divider span {
+            padding: 0 16px;
+            font-size: 14px;
+        }
+
+        .dashboard {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .greeting {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--terracotta);
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            background: var(--success);
+            color: white;
+        }
+
+        .kora-card {
+            background: linear-gradient(135deg, var(--terracotta) 0%, var(--terracotta-dark) 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(193, 68, 14, 0.3);
+        }
+
+        .kora-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .kora-avatar {
+            font-size: 48px;
+        }
+
+        .kora-info h3 {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .kora-info p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .kora-prompt {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 2px solid transparent;
+        }
+
+        .menu-card:active {
+            transform: scale(0.95);
+            border-color: var(--terracotta);
+        }
+
+        .menu-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .menu-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .menu-badge {
+            display: inline-block;
+            background: var(--error);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--sand-light);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: var(--clay);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid var(--sand);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--clay);
+            flex: 1;
+            border: none;
+            background: none;
+        }
+
+        .nav-item.active {
+            color: var(--terracotta);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-label {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--sand);
+            border-top-color: var(--terracotta);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 72px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-size: 18px;
+            color: var(--clay);
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .alert-info {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .alert-warning {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .alert-success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--terracotta);
+            z-index: 100;
+        }
+
+        .screen-header {
+            padding-top: 60px;
+            margin-bottom: 24px;
+        }
+
+        .screen-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--terracotta);
+            text-align: center;
+        }
+
+        @media (max-width: 380px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .speaking {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            z-index: 1000;
+            text-align: center;
+            display: none;
+        }
+
+        .speaking.active {
+            display: block;
+        }
+
+        .speaking-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            animation: voicePulse 1s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div id="splashScreen" class="screen active splash-screen">
+        <div class="logo">🌾</div>
+        <h1 class="splash-title">Socium Worker</h1>
+        <p class="splash-subtitle">Votre compagnon de travail</p>
+        <div class="language-selector">
+            <button class="lang-btn" onclick="selectLanguage('fr')">
+                <span class="lang-flag">🇫🇷</span>
+                <span>Français</span>
+            </button>
+            <button class="lang-btn" onclick="selectLanguage('en')">
+                <span class="lang-flag">🇬🇧</span>
+                <span>English</span>
+            </button>
+            <button class="lang-btn" onclick="selectLanguage('sw')">
+                <span class="lang-flag">🇹🇿</span>
+                <span>Kiswahili</span>
+            </button>
+            <button class="lang-btn" onclick="selectLanguage('ha')">
+                <span class="lang-flag">🇳🇬</span>
+                <span>Hausa</span>
+            </button>
+            <button class="lang-btn" onclick="selectLanguage('wo')">
+                <span class="lang-flag">🇸🇳</span>
+                <span>Wolof</span>
+            </button>
+            <button class="lang-btn" onclick="selectLanguage('bm')">
+                <span class="lang-flag">🇲🇱</span>
+                <span>Bamanankan</span>
+            </button>
+            <button class="lang-btn" onclick="selectLanguage('pt')">
+                <span class="lang-flag">🇵🇹</span>
+                <span>Português</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="authScreen" class="screen auth-screen">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-icon">📱</div>
+                <h2 class="auth-title" id="authTitle">Connexion</h2>
+                <p class="auth-subtitle" id="authSubtitle">Entrez votre numéro de téléphone</p>
+            </div>
+
+            <div class="voice-prompt">
+                <div class="voice-icon">🎤</div>
+                <p class="voice-text" id="voicePrompt">Dites votre numéro</p>
+                <p class="voice-subtext" id="voiceHelp">Ou tapez ci-dessous</p>
+            </div>
+
+            <button class="btn btn-voice" id="voiceInputBtn" onclick="startVoiceInput()">
+                <span id="voiceInputIcon">🎤</span>
+                <span id="voiceInputText">Appuyez pour parler</span>
+            </button>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span class="input-icon">📱</span>
+                    <span id="phoneLabel">Numéro de téléphone</span>
+                </label>
+                <input
+                    type="tel"
+                    id="phoneInput"
+                    class="input-field"
+                    placeholder="+221 77 123 45 67"
+                    autocomplete="tel"
+                >
+            </div>
+
+            <button class="btn btn-primary" id="sendOTPBtn" onclick="sendOTP()">
+                <span>Continuer</span>
+                <span>→</span>
+            </button>
+
+            <div class="divider">
+                <span id="orText">OU</span>
+            </div>
+
+            <button class="btn btn-secondary" onclick="showPINLogin()">
+                <span>🔢</span>
+                <span id="pinLoginText">Connexion avec code PIN</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="otpScreen" class="screen auth-screen">
+        <button class="back-button" onclick="goBack()">←</button>
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-icon">✉️</div>
+                <h2 class="auth-title" id="otpTitle">Code de vérification</h2>
+                <p class="auth-subtitle" id="otpSubtitle">Entrez le code reçu par SMS</p>
+            </div>
+
+            <div class="input-group">
+                <input
+                    type="text"
+                    id="otpInput"
+                    class="input-field large"
+                    placeholder="000000"
+                    maxlength="6"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    autocomplete="one-time-code"
+                >
+            </div>
+
+            <button class="btn btn-primary" id="verifyOTPBtn" onclick="verifyOTP()">
+                <span id="verifyText">Vérifier</span>
+                <span>✓</span>
+            </button>
+
+            <button class="btn btn-secondary" style="margin-top: 16px;" onclick="resendOTP()">
+                <span>🔄</span>
+                <span id="resendText">Renvoyer le code</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="registrationScreen" class="screen auth-screen">
+        <button class="back-button" onclick="goBack()">←</button>
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-icon">👤</div>
+                <h2 class="auth-title" id="regTitle">Bienvenue !</h2>
+                <p class="auth-subtitle" id="regSubtitle">Complétez votre profil</p>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span class="input-icon">👤</span>
+                    <span id="nameLabel">Votre nom complet</span>
+                </label>
+                <input
+                    type="text"
+                    id="fullNameInput"
+                    class="input-field"
+                    autocomplete="name"
+                >
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">
+                    <span class="input-icon">💼</span>
+                    <span id="jobLabel">Votre métier</span>
+                </label>
+                <input
+                    type="text"
+                    id="jobInput"
+                    class="input-field"
+                    placeholder="Ex: Cultivateur, Éleveur..."
+                >
+            </div>
+
+            <button class="btn btn-primary" onclick="completeRegistration()">
+                <span id="completeText">Terminer</span>
+                <span>✓</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="dashboardScreen" class="screen">
+        <div class="dashboard">
+            <div class="dashboard-header">
+                <h2 class="greeting" id="greeting">Bonjour !</h2>
+                <span class="status-badge">
+                    <span>●</span>
+                    <span id="statusText">Actif</span>
+                </span>
+            </div>
+
+            <div class="kora-card">
+                <div class="kora-header">
+                    <div class="kora-avatar">🤖</div>
+                    <div class="kora-info">
+                        <h3>Kora</h3>
+                        <p id="koraRole">Votre assistante</p>
+                    </div>
+                </div>
+                <p class="kora-prompt" id="koraPrompt">Comment puis-je vous aider aujourd'hui ?</p>
+                <button class="btn btn-voice" id="koraVoiceBtn" onclick="talkToKora()">
+                    <span>🎤</span>
+                    <span id="talkToKoraText">Parler à Kora</span>
+                </button>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-card" onclick="navigateTo('payrollScreen')">
+                    <div class="menu-icon">💰</div>
+                    <div class="menu-title" id="payrollMenu">Mon Salaire</div>
+                    <span class="menu-badge" id="newBadge" style="display: none;">Nouveau</span>
+                </div>
+
+                <div class="menu-card" onclick="navigateTo('contractsScreen')">
+                    <div class="menu-icon">📄</div>
+                    <div class="menu-title" id="contractsMenu">Mes Contrats</div>
+                </div>
+
+                <div class="menu-card" onclick="navigateTo('protectionScreen')">
+                    <div class="menu-icon">🛡️</div>
+                    <div class="menu-title" id="protectionMenu">Ma Protection</div>
+                </div>
+
+                <div class="menu-card" onclick="navigateTo('settingsScreen')">
+                    <div class="menu-icon">⚙️</div>
+                    <div class="menu-title" id="settingsMenu">Paramètres</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="navigateTo('dashboardScreen')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label" id="navHome">Accueil</div>
+            </button>
+            <button class="nav-item" onclick="navigateTo('payrollScreen')">
+                <div class="nav-icon">💰</div>
+                <div class="nav-label" id="navPayroll">Salaire</div>
+            </button>
+            <button class="nav-item" onclick="navigateTo('protectionScreen')">
+                <div class="nav-icon">🛡️</div>
+                <div class="nav-label" id="navProtection">Protection</div>
+            </button>
+            <button class="nav-item" onclick="navigateTo('settingsScreen')">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-label" id="navSettings">Plus</div>
+            </button>
+        </div>
+    </div>
+
+    <div id="payrollScreen" class="screen">
+        <button class="back-button" onclick="navigateTo('dashboardScreen')">←</button>
+        <div class="dashboard">
+            <div class="screen-header">
+                <h2 class="screen-title" id="payrollTitle">Mon Salaire</h2>
+            </div>
+
+            <div id="payrollContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p id="loadingText">Chargement...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="contractsScreen" class="screen">
+        <button class="back-button" onclick="navigateTo('dashboardScreen')">←</button>
+        <div class="dashboard">
+            <div class="screen-header">
+                <h2 class="screen-title" id="contractsTitle">Mes Contrats</h2>
+            </div>
+
+            <div id="contractsContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p id="loadingText2">Chargement...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="protectionScreen" class="screen">
+        <button class="back-button" onclick="navigateTo('dashboardScreen')">←</button>
+        <div class="dashboard">
+            <div class="screen-header">
+                <h2 class="screen-title" id="protectionTitle">Ma Protection Sociale</h2>
+            </div>
+
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                <div>
+                    <strong id="protectionInfoTitle">Vos droits</strong>
+                    <p id="protectionInfo">Vous bénéficiez d'une protection sociale conforme à la loi.</p>
+                </div>
+            </div>
+
+            <div id="protectionContent">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p id="loadingText3">Chargement...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsScreen" class="screen">
+        <button class="back-button" onclick="navigateTo('dashboardScreen')">←</button>
+        <div class="dashboard">
+            <div class="screen-header">
+                <h2 class="screen-title" id="settingsTitle">Paramètres</h2>
+            </div>
+
+            <div class="section-title">
+                <span>🌍</span>
+                <span id="languageTitle">Langue</span>
+            </div>
+            <div class="info-card">
+                <div class="info-row" onclick="changeLanguage()">
+                    <div class="info-label">
+                        <span>🗣️</span>
+                        <span id="currentLangLabel">Langue actuelle</span>
+                    </div>
+                    <div class="info-value" id="currentLang">Français</div>
+                </div>
+            </div>
+
+            <div class="section-title">
+                <span>👤</span>
+                <span id="accountTitle">Mon Compte</span>
+            </div>
+            <div class="info-card">
+                <div class="info-row">
+                    <div class="info-label">
+                        <span>📱</span>
+                        <span id="phoneSettingLabel">Téléphone</span>
+                    </div>
+                    <div class="info-value" id="userPhone">-</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">
+                        <span>👤</span>
+                        <span id="nameSettingLabel">Nom</span>
+                    </div>
+                    <div class="info-value" id="userName">-</div>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" style="margin-top: 24px;" onclick="logout()">
+                <span>🚪</span>
+                <span id="logoutText">Déconnexion</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="speaking" id="speakingIndicator">
+        <div class="speaking-icon">🔊</div>
+        <p id="speakingText">Kora parle...</p>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://dqqmkwxmypwbqsbzdvhm.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRxcW1rd3hteXB3YnFzYnpkdmhtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxMTU1NDAsImV4cCI6MjA1NzY5MTU0MH0.V3WaYJZbPrEXyNrRkM5hSdgG9OvQvHSl9_bhU9HxmWw';
+
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+        let currentLanguage = 'fr';
+        let speechSynthesis = window.speechSynthesis;
+        let recognition = null;
+        let currentScreen = 'splashScreen';
+
+        const translations = {
+            fr: {
+                authTitle: 'Connexion',
+                authSubtitle: 'Entrez votre numéro de téléphone',
+                voicePrompt: 'Dites votre numéro',
+                voiceHelp: 'Ou tapez ci-dessous',
+                voiceInputText: 'Appuyez pour parler',
+                phoneLabel: 'Numéro de téléphone',
+                orText: 'OU',
+                pinLoginText: 'Connexion avec code PIN',
+                otpTitle: 'Code de vérification',
+                otpSubtitle: 'Entrez le code reçu par SMS',
+                verifyText: 'Vérifier',
+                resendText: 'Renvoyer le code',
+                regTitle: 'Bienvenue !',
+                regSubtitle: 'Complétez votre profil',
+                nameLabel: 'Votre nom complet',
+                jobLabel: 'Votre métier',
+                completeText: 'Terminer',
+                greeting: 'Bonjour',
+                statusText: 'Actif',
+                koraRole: 'Votre assistante',
+                koraPrompt: 'Comment puis-je vous aider aujourd\'hui ?',
+                talkToKoraText: 'Parler à Kora',
+                payrollMenu: 'Mon Salaire',
+                contractsMenu: 'Mes Contrats',
+                protectionMenu: 'Ma Protection',
+                settingsMenu: 'Paramètres',
+                navHome: 'Accueil',
+                navPayroll: 'Salaire',
+                navProtection: 'Protection',
+                navSettings: 'Plus',
+                payrollTitle: 'Mon Salaire',
+                contractsTitle: 'Mes Contrats',
+                protectionTitle: 'Ma Protection Sociale',
+                settingsTitle: 'Paramètres',
+                loadingText: 'Chargement...',
+                protectionInfoTitle: 'Vos droits',
+                protectionInfo: 'Vous bénéficiez d\'une protection sociale conforme à la loi.',
+                languageTitle: 'Langue',
+                currentLangLabel: 'Langue actuelle',
+                currentLang: 'Français',
+                accountTitle: 'Mon Compte',
+                phoneSettingLabel: 'Téléphone',
+                nameSettingLabel: 'Nom',
+                logoutText: 'Déconnexion',
+                speakingText: 'Kora parle...',
+                listening: 'J\'écoute...',
+                noPayroll: 'Aucun paiement pour le moment',
+                noContracts: 'Aucun contrat disponible',
+                contributionHealth: 'Cotisation Santé',
+                contributionPension: 'Cotisation Retraite',
+                contributionAccident: 'Accident du travail'
+            },
+            en: {
+                authTitle: 'Login',
+                authSubtitle: 'Enter your phone number',
+                voicePrompt: 'Say your number',
+                voiceHelp: 'Or type below',
+                voiceInputText: 'Press to speak',
+                phoneLabel: 'Phone number',
+                orText: 'OR',
+                pinLoginText: 'Login with PIN code',
+                otpTitle: 'Verification code',
+                otpSubtitle: 'Enter the code received by SMS',
+                verifyText: 'Verify',
+                resendText: 'Resend code',
+                regTitle: 'Welcome!',
+                regSubtitle: 'Complete your profile',
+                nameLabel: 'Your full name',
+                jobLabel: 'Your job',
+                completeText: 'Complete',
+                greeting: 'Hello',
+                statusText: 'Active',
+                koraRole: 'Your assistant',
+                koraPrompt: 'How can I help you today?',
+                talkToKoraText: 'Talk to Kora',
+                payrollMenu: 'My Salary',
+                contractsMenu: 'My Contracts',
+                protectionMenu: 'My Protection',
+                settingsMenu: 'Settings',
+                navHome: 'Home',
+                navPayroll: 'Salary',
+                navProtection: 'Protection',
+                navSettings: 'More',
+                payrollTitle: 'My Salary',
+                contractsTitle: 'My Contracts',
+                protectionTitle: 'My Social Protection',
+                settingsTitle: 'Settings',
+                loadingText: 'Loading...',
+                protectionInfoTitle: 'Your rights',
+                protectionInfo: 'You benefit from social protection in accordance with the law.',
+                languageTitle: 'Language',
+                currentLangLabel: 'Current language',
+                currentLang: 'English',
+                accountTitle: 'My Account',
+                phoneSettingLabel: 'Phone',
+                nameSettingLabel: 'Name',
+                logoutText: 'Logout',
+                speakingText: 'Kora is speaking...',
+                listening: 'Listening...',
+                noPayroll: 'No payments yet',
+                noContracts: 'No contracts available',
+                contributionHealth: 'Health Contribution',
+                contributionPension: 'Pension Contribution',
+                contributionAccident: 'Work Accident'
+            },
+            sw: {
+                authTitle: 'Ingia',
+                authSubtitle: 'Weka nambari yako ya simu',
+                voicePrompt: 'Sema nambari yako',
+                voiceHelp: 'Au andika hapa chini',
+                voiceInputText: 'Bonyeza kusema',
+                phoneLabel: 'Nambari ya simu',
+                orText: 'AU',
+                pinLoginText: 'Ingia na nambari ya siri',
+                otpTitle: 'Msimbo wa uthibitisho',
+                otpSubtitle: 'Weka msimbo uliopokea kwa SMS',
+                verifyText: 'Thibitisha',
+                resendText: 'Tuma tena msimbo',
+                regTitle: 'Karibu!',
+                regSubtitle: 'Kamilisha wasifu wako',
+                nameLabel: 'Jina lako kamili',
+                jobLabel: 'Kazi yako',
+                completeText: 'Maliza',
+                greeting: 'Habari',
+                statusText: 'Hai',
+                koraRole: 'Msaidizi wako',
+                koraPrompt: 'Ninaweza kukusaidia vipi leo?',
+                talkToKoraText: 'Zungumza na Kora',
+                payrollMenu: 'Mshahara Wangu',
+                contractsMenu: 'Mikataba Yangu',
+                protectionMenu: 'Ulinzi Wangu',
+                settingsMenu: 'Mipangilio',
+                navHome: 'Nyumbani',
+                navPayroll: 'Mshahara',
+                navProtection: 'Ulinzi',
+                navSettings: 'Zaidi',
+                payrollTitle: 'Mshahara Wangu',
+                contractsTitle: 'Mikataba Yangu',
+                protectionTitle: 'Ulinzi Wangu wa Kijamii',
+                settingsTitle: 'Mipangilio',
+                loadingText: 'Inapakia...',
+                protectionInfoTitle: 'Haki zako',
+                protectionInfo: 'Unafaidika na ulinzi wa kijamii kulingana na sheria.',
+                languageTitle: 'Lugha',
+                currentLangLabel: 'Lugha ya sasa',
+                currentLang: 'Kiswahili',
+                accountTitle: 'Akaunti Yangu',
+                phoneSettingLabel: 'Simu',
+                nameSettingLabel: 'Jina',
+                logoutText: 'Toka',
+                speakingText: 'Kora anazungumza...',
+                listening: 'Ninasikia...',
+                noPayroll: 'Hakuna malipo bado',
+                noContracts: 'Hakuna mikataba',
+                contributionHealth: 'Mchango wa Afya',
+                contributionPension: 'Mchango wa Pensheni',
+                contributionAccident: 'Ajali ya Kazi'
+            },
+            ha: {
+                authTitle: 'Shiga',
+                authSubtitle: 'Shigar da lambar wayarka',
+                voicePrompt: 'Faɗa lambar ka',
+                voiceHelp: 'Ko rubuta a ƙasa',
+                voiceInputText: 'Danna don magana',
+                phoneLabel: 'Lambar waya',
+                orText: 'KO',
+                pinLoginText: 'Shiga da lambar sirri',
+                otpTitle: 'Lambar tabbatarwa',
+                otpSubtitle: 'Shigar da lambar da aka karɓa ta SMS',
+                verifyText: 'Tabbatar',
+                resendText: 'Sake aika lambar',
+                regTitle: 'Maraba!',
+                regSubtitle: 'Cika bayanan ka',
+                nameLabel: 'Cikakken suna',
+                jobLabel: 'Aikinka',
+                completeText: 'Gama',
+                greeting: 'Sannu',
+                statusText: 'Mai aiki',
+                koraRole: 'Mataimakinka',
+                koraPrompt: 'Yaya zan iya taimaka maka yau?',
+                talkToKoraText: 'Yi magana da Kora',
+                payrollMenu: 'Albashina',
+                contractsMenu: 'Kwangilorina',
+                protectionMenu: 'Kariyata',
+                settingsMenu: 'Saiti',
+                navHome: 'Gida',
+                navPayroll: 'Albashi',
+                navProtection: 'Kariya',
+                navSettings: 'Ƙari',
+                payrollTitle: 'Albashina',
+                contractsTitle: 'Kwangilorina',
+                protectionTitle: 'Kariyar Zamantakewa',
+                settingsTitle: 'Saiti',
+                loadingText: 'Ana lodawa...',
+                protectionInfoTitle: 'Haƙƙoƙinka',
+                protectionInfo: 'Kana samun kariyar zamantakewa bisa ga doka.',
+                languageTitle: 'Yare',
+                currentLangLabel: 'Yaren yanzu',
+                currentLang: 'Hausa',
+                accountTitle: 'Asusuna',
+                phoneSettingLabel: 'Waya',
+                nameSettingLabel: 'Suna',
+                logoutText: 'Fita',
+                speakingText: 'Kora yana magana...',
+                listening: 'Ina sauraron...',
+                noPayroll: 'Babu biyan kuɗi har yanzu',
+                noContracts: 'Babu kwangila',
+                contributionHealth: 'Gudummawar Lafiya',
+                contributionPension: 'Gudummawar Fansho',
+                contributionAccident: 'Hatsarin Aiki'
+            },
+            wo: {
+                authTitle: 'Dugg',
+                authSubtitle: 'Duggal sa nimero telefon',
+                voicePrompt: 'Wax sa nimero',
+                voiceHelp: 'Walla bind ci suuf',
+                voiceInputText: 'Bët ngir wax',
+                phoneLabel: 'Nimero telefon',
+                orText: 'WALLA',
+                pinLoginText: 'Dugg ak kode PIN',
+                otpTitle: 'Kode verification',
+                otpSubtitle: 'Duggal kode bu ñu yonnee ci SMS',
+                verifyText: 'Xoolal',
+                resendText: 'Yonnewaat kode',
+                regTitle: 'Dalal jam!',
+                regSubtitle: 'Tëral sa profil',
+                nameLabel: 'Sa tur bu mat',
+                jobLabel: 'Sa liggéey',
+                completeText: 'Jeex',
+                greeting: 'Nanga def',
+                statusText: 'Dafa liggeey',
+                koraRole: 'Sa ndimbalkat',
+                koraPrompt: 'Naka lañ mën a dimbalé tey?',
+                talkToKoraText: 'Wax ak Kora',
+                payrollMenu: 'Sama Saleer',
+                contractsMenu: 'Sama Kontara',
+                protectionMenu: 'Sama Rënd',
+                settingsMenu: 'Parametër',
+                navHome: 'Kër',
+                navPayroll: 'Saleer',
+                navProtection: 'Rënd',
+                navSettings: 'Yeneeni',
+                payrollTitle: 'Sama Saleer',
+                contractsTitle: 'Sama Kontara',
+                protectionTitle: 'Sama Rënd bu Askan',
+                settingsTitle: 'Parametër',
+                loadingText: 'Dafay yeeb...',
+                protectionInfoTitle: 'Sa sag',
+                protectionInfo: 'Danga am rënd bu askan bu dëgër ak loi.',
+                languageTitle: 'Làkk',
+                currentLangLabel: 'Làkk bu am léegi',
+                currentLang: 'Wolof',
+                accountTitle: 'Sama Konte',
+                phoneSettingLabel: 'Telefon',
+                nameSettingLabel: 'Tur',
+                logoutText: 'Génn',
+                speakingText: 'Kora dafay wax...',
+                listening: 'Dama dégg...',
+                noPayroll: 'Amul fay ba leegi',
+                noContracts: 'Amul kontar',
+                contributionHealth: 'Cotisation Wergu Yaram',
+                contributionPension: 'Cotisation Retraite',
+                contributionAccident: 'Jafe ci Liggéey'
+            },
+            bm: {
+                authTitle: 'Don',
+                authSubtitle: 'I ka telefɔni nimɔrɔ sɛbɛn',
+                voicePrompt: 'I ka nimɔrɔ fɔ',
+                voiceHelp: 'Walima a sɛbɛn duguma',
+                voiceInputText: 'A mɛn ka kuma',
+                phoneLabel: 'Telefɔni nimɔrɔ',
+                orText: 'WALIMA',
+                pinLoginText: 'Don ni kode PIN ye',
+                otpTitle: 'Verification kode',
+                otpSubtitle: 'Kode min sɔrɔla SMS la, o sɛbɛn',
+                verifyText: 'A lajɛ',
+                resendText: 'Kode bila kokura',
+                regTitle: 'Aw ni tile!',
+                regSubtitle: 'I ka profil dafa',
+                nameLabel: 'I ka tɔgɔ',
+                jobLabel: 'I ka baara',
+                completeText: 'A ban',
+                greeting: 'I ni sɔgɔma',
+                statusText: 'A bɛ baara la',
+                koraRole: 'I ka dɛmɛbaga',
+                koraPrompt: 'Ne bɛ se ka i dɛmɛ cogo di bi?',
+                talkToKoraText: 'Kuma ni Kora ye',
+                payrollMenu: 'N ka Sara',
+                contractsMenu: 'N ka Lasigiliden',
+                protectionMenu: 'N ka Kanw',
+                settingsMenu: 'Paramɛtɛrɛ',
+                navHome: 'So',
+                navPayroll: 'Sara',
+                navProtection: 'Kanw',
+                navSettings: 'Wɛrɛw',
+                payrollTitle: 'N ka Sara',
+                contractsTitle: 'N ka Lasigiliden',
+                protectionTitle: 'N ka Sigida Kanw',
+                settingsTitle: 'Paramɛtɛrɛ',
+                loadingText: 'A bɛ ladon...',
+                protectionInfoTitle: 'I ka seko',
+                protectionInfo: 'I bɛ sigida kanw sɔrɔ sariya kɛcogo la.',
+                languageTitle: 'Kan',
+                currentLangLabel: 'Kan min bɛ yen sisan',
+                currentLang: 'Bamanankan',
+                accountTitle: 'N ka Konte',
+                phoneSettingLabel: 'Telefɔni',
+                nameSettingLabel: 'Tɔgɔ',
+                logoutText: 'Bɔ',
+                speakingText: 'Kora bɛ kuma...',
+                listening: 'N bɛ mɛn...',
+                noPayroll: 'Sara tɛ yen fɔlɔ',
+                noContracts: 'Lasigiliden tɛ yen',
+                contributionHealth: 'Kɛnɛya Cotisation',
+                contributionPension: 'Retraite Cotisation',
+                contributionAccident: 'Baara Kɔnɔ Janfa'
+            },
+            pt: {
+                authTitle: 'Entrar',
+                authSubtitle: 'Digite seu número de telefone',
+                voicePrompt: 'Diga seu número',
+                voiceHelp: 'Ou digite abaixo',
+                voiceInputText: 'Pressione para falar',
+                phoneLabel: 'Número de telefone',
+                orText: 'OU',
+                pinLoginText: 'Entrar com código PIN',
+                otpTitle: 'Código de verificação',
+                otpSubtitle: 'Digite o código recebido por SMS',
+                verifyText: 'Verificar',
+                resendText: 'Reenviar código',
+                regTitle: 'Bem-vindo!',
+                regSubtitle: 'Complete seu perfil',
+                nameLabel: 'Seu nome completo',
+                jobLabel: 'Sua profissão',
+                completeText: 'Concluir',
+                greeting: 'Olá',
+                statusText: 'Ativo',
+                koraRole: 'Sua assistente',
+                koraPrompt: 'Como posso ajudá-lo hoje?',
+                talkToKoraText: 'Falar com Kora',
+                payrollMenu: 'Meu Salário',
+                contractsMenu: 'Meus Contratos',
+                protectionMenu: 'Minha Proteção',
+                settingsMenu: 'Configurações',
+                navHome: 'Início',
+                navPayroll: 'Salário',
+                navProtection: 'Proteção',
+                navSettings: 'Mais',
+                payrollTitle: 'Meu Salário',
+                contractsTitle: 'Meus Contratos',
+                protectionTitle: 'Minha Proteção Social',
+                settingsTitle: 'Configurações',
+                loadingText: 'Carregando...',
+                protectionInfoTitle: 'Seus direitos',
+                protectionInfo: 'Você se beneficia de proteção social de acordo com a lei.',
+                languageTitle: 'Idioma',
+                currentLangLabel: 'Idioma atual',
+                currentLang: 'Português',
+                accountTitle: 'Minha Conta',
+                phoneSettingLabel: 'Telefone',
+                nameSettingLabel: 'Nome',
+                logoutText: 'Sair',
+                speakingText: 'Kora está falando...',
+                listening: 'Ouvindo...',
+                noPayroll: 'Nenhum pagamento ainda',
+                noContracts: 'Nenhum contrato disponível',
+                contributionHealth: 'Contribuição de Saúde',
+                contributionPension: 'Contribuição de Pensão',
+                contributionAccident: 'Acidente de Trabalho'
+            }
+        };
+
+        function t(key) {
+            return translations[currentLanguage][key] || key;
+        }
+
+        function updateTranslations() {
+            Object.keys(translations[currentLanguage]).forEach(key => {
+                const elements = document.querySelectorAll(`#${key}`);
+                elements.forEach(el => {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = t(key);
+                    } else {
+                        el.textContent = t(key);
+                    }
+                });
+            });
+        }
+
+        function selectLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('socium_worker_language', lang);
+            updateTranslations();
+            navigateTo('authScreen');
+        }
+
+        function navigateTo(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+            currentScreen = screenId;
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            if (screenId === 'dashboardScreen') loadDashboard();
+            if (screenId === 'payrollScreen') loadPayroll();
+            if (screenId === 'contractsScreen') loadContracts();
+            if (screenId === 'protectionScreen') loadProtection();
+        }
+
+        function goBack() {
+            if (currentScreen === 'otpScreen') {
+                navigateTo('authScreen');
+            } else if (currentScreen === 'registrationScreen') {
+                navigateTo('authScreen');
+            } else {
+                navigateTo('dashboardScreen');
+            }
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+
+                const langMap = {
+                    'fr': 'fr-FR',
+                    'en': 'en-US',
+                    'sw': 'sw-TZ',
+                    'ha': 'ha-NG',
+                    'wo': 'wo-SN',
+                    'pt': 'pt-PT'
+                };
+
+                utterance.lang = langMap[currentLanguage] || 'fr-FR';
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+
+                document.getElementById('speakingIndicator').classList.add('active');
+
+                utterance.onend = () => {
+                    document.getElementById('speakingIndicator').classList.remove('active');
+                };
+
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function startVoiceInput() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Voice recognition not supported');
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+
+            const langMap = {
+                'fr': 'fr-FR',
+                'en': 'en-US',
+                'sw': 'sw-TZ',
+                'ha': 'ha-NG',
+                'wo': 'wo-SN',
+                'pt': 'pt-PT'
+            };
+
+            recognition.lang = langMap[currentLanguage] || 'fr-FR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            const btn = document.getElementById('voiceInputBtn');
+            btn.classList.add('listening');
+            document.getElementById('voiceInputText').textContent = t('listening');
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('phoneInput').value = transcript.replace(/\s/g, '');
+                btn.classList.remove('listening');
+                document.getElementById('voiceInputText').textContent = t('voiceInputText');
+            };
+
+            recognition.onerror = () => {
+                btn.classList.remove('listening');
+                document.getElementById('voiceInputText').textContent = t('voiceInputText');
+            };
+
+            recognition.onend = () => {
+                btn.classList.remove('listening');
+                document.getElementById('voiceInputText').textContent = t('voiceInputText');
+            };
+
+            recognition.start();
+        }
+
+        async function sendOTP() {
+            const phone = document.getElementById('phoneInput').value;
+            if (!phone) {
+                speak(t('phoneLabel'));
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithOtp({
+                    phone: phone
+                });
+
+                if (error) throw error;
+
+                localStorage.setItem('socium_worker_phone', phone);
+                speak(t('otpSubtitle'));
+                navigateTo('otpScreen');
+            } catch (error) {
+                console.error('Error sending OTP:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function verifyOTP() {
+            const phone = localStorage.getItem('socium_worker_phone');
+            const otp = document.getElementById('otpInput').value;
+
+            if (!otp || otp.length !== 6) {
+                speak(t('otpTitle'));
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.verifyOtp({
+                    phone: phone,
+                    token: otp,
+                    type: 'sms'
+                });
+
+                if (error) throw error;
+
+                currentUser = data.user;
+
+                const { data: worker } = await supabaseClient
+                    .from('workers')
+                    .select('*')
+                    .eq('phone', phone)
+                    .maybeSingle();
+
+                if (worker) {
+                    navigateTo('dashboardScreen');
+                } else {
+                    navigateTo('registrationScreen');
+                }
+            } catch (error) {
+                console.error('Error verifying OTP:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function resendOTP() {
+            const phone = localStorage.getItem('socium_worker_phone');
+            if (phone) {
+                await sendOTP();
+            }
+        }
+
+        function showPINLogin() {
+            alert('PIN login coming soon');
+        }
+
+        async function completeRegistration() {
+            const fullName = document.getElementById('fullNameInput').value;
+            const job = document.getElementById('jobInput').value;
+
+            if (!fullName) {
+                speak(t('nameLabel'));
+                return;
+            }
+
+            try {
+                const phone = localStorage.getItem('socium_worker_phone');
+
+                const { data, error } = await supabaseClient
+                    .from('workers')
+                    .update({
+                        full_name: fullName,
+                        role_title: job || 'Worker'
+                    })
+                    .eq('phone', phone);
+
+                if (error) throw error;
+
+                speak(t('greeting') + ' ' + fullName);
+                navigateTo('dashboardScreen');
+            } catch (error) {
+                console.error('Error completing registration:', error);
+            }
+        }
+
+        async function loadDashboard() {
+            if (!currentUser) return;
+
+            try {
+                const { data: user } = await supabaseClient.auth.getUser();
+                if (!user) return;
+
+                const { data: worker } = await supabaseClient
+                    .from('workers')
+                    .select('*')
+                    .eq('user_id', user.user.id)
+                    .maybeSingle();
+
+                if (worker) {
+                    document.getElementById('greeting').textContent = t('greeting') + ' ' + worker.full_name + '!';
+                    document.getElementById('userName').textContent = worker.full_name;
+                    document.getElementById('userPhone').textContent = worker.phone;
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        async function loadPayroll() {
+            const content = document.getElementById('payrollContent');
+
+            try {
+                const { data: user } = await supabaseClient.auth.getUser();
+                if (!user) return;
+
+                const { data: payrolls } = await supabaseClient
+                    .from('payrolls')
+                    .select('*')
+                    .eq('worker_id', user.user.id)
+                    .order('pay_period_start', { ascending: false });
+
+                if (!payrolls || payrolls.length === 0) {
+                    content.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">💰</div>
+                            <p class="empty-text">${t('noPayroll')}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                content.innerHTML = payrolls.map(p => `
+                    <div class="info-card">
+                        <div class="info-row">
+                            <div class="info-label">📅 ${new Date(p.pay_period_start).toLocaleDateString()}</div>
+                            <div class="info-value">${p.gross_salary.toLocaleString()} FCFA</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">${t('contributionHealth')}</div>
+                            <div class="info-value">${p.health_contribution.toLocaleString()} FCFA</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">${t('contributionPension')}</div>
+                            <div class="info-value">${p.pension_contribution.toLocaleString()} FCFA</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">💵 Net</div>
+                            <div class="info-value" style="color: var(--success); font-size: 20px;">${p.net_salary.toLocaleString()} FCFA</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading payroll:', error);
+            }
+        }
+
+        async function loadContracts() {
+            const content = document.getElementById('contractsContent');
+
+            try {
+                const { data: user } = await supabaseClient.auth.getUser();
+                if (!user) return;
+
+                const { data: contracts } = await supabaseClient
+                    .from('contracts')
+                    .select('*')
+                    .eq('worker_id', user.user.id)
+                    .order('start_date', { ascending: false });
+
+                if (!contracts || contracts.length === 0) {
+                    content.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📄</div>
+                            <p class="empty-text">${t('noContracts')}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                content.innerHTML = contracts.map(c => `
+                    <div class="info-card">
+                        <div class="info-row">
+                            <div class="info-label">📄 Type</div>
+                            <div class="info-value">${c.contract_type}</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">📅 Début</div>
+                            <div class="info-value">${new Date(c.start_date).toLocaleDateString()}</div>
+                        </div>
+                        ${c.end_date ? `
+                        <div class="info-row">
+                            <div class="info-label">📅 Fin</div>
+                            <div class="info-value">${new Date(c.end_date).toLocaleDateString()}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading contracts:', error);
+            }
+        }
+
+        async function loadProtection() {
+            const content = document.getElementById('protectionContent');
+
+            try {
+                const { data: user } = await supabaseClient.auth.getUser();
+                if (!user) return;
+
+                const { data: contributions } = await supabaseClient
+                    .from('social_contributions')
+                    .select('*')
+                    .eq('worker_id', user.user.id)
+                    .order('contribution_date', { ascending: false })
+                    .limit(12);
+
+                if (!contributions || contributions.length === 0) {
+                    content.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">🛡️</div>
+                            <p class="empty-text">Aucune contribution enregistrée</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const totalHealth = contributions.reduce((sum, c) => sum + (c.health_contribution || 0), 0);
+                const totalPension = contributions.reduce((sum, c) => sum + (c.pension_contribution || 0), 0);
+                const totalAccident = contributions.reduce((sum, c) => sum + (c.accident_contribution || 0), 0);
+
+                content.innerHTML = `
+                    <div class="info-card">
+                        <div class="info-row">
+                            <div class="info-label">🏥 ${t('contributionHealth')}</div>
+                            <div class="info-value">${totalHealth.toLocaleString()} FCFA</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">👴 ${t('contributionPension')}</div>
+                            <div class="info-value">${totalPension.toLocaleString()} FCFA</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">⚠️ ${t('contributionAccident')}</div>
+                            <div class="info-value">${totalAccident.toLocaleString()} FCFA</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading protection:', error);
+            }
+        }
+
+        function changeLanguage() {
+            navigateTo('splashScreen');
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            currentUser = null;
+            navigateTo('authScreen');
+        }
+
+        async function talkToKora() {
+            speak(t('koraPrompt'));
+
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+
+            const langMap = {
+                'fr': 'fr-FR',
+                'en': 'en-US',
+                'sw': 'sw-TZ',
+                'ha': 'ha-NG',
+                'wo': 'wo-SN',
+                'pt': 'pt-PT'
+            };
+
+            recognition.lang = langMap[currentLanguage] || 'fr-FR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            const btn = document.getElementById('koraVoiceBtn');
+            btn.classList.add('listening');
+
+            recognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript;
+                btn.classList.remove('listening');
+
+                const response = await getKoraResponseEnhanced(transcript);
+                speak(response);
+            };
+
+            recognition.onerror = () => {
+                btn.classList.remove('listening');
+            };
+
+            recognition.onend = () => {
+                btn.classList.remove('listening');
+            };
+
+            recognition.start();
+        }
+
+        async function getKoraResponse(question) {
+            const responses = {
+                fr: {
+                    salary: 'Votre dernier salaire est affiché dans la section Mon Salaire.',
+                    contract: 'Vous pouvez voir vos contrats dans la section Mes Contrats.',
+                    protection: 'Votre protection sociale est dans la section Ma Protection.',
+                    default: 'Je suis là pour vous aider. Posez-moi une question sur votre salaire, vos contrats ou votre protection sociale.'
+                }
+            };
+
+            const lang = responses[currentLanguage] || responses.fr;
+
+            if (question.toLowerCase().includes('salaire') || question.toLowerCase().includes('salary')) {
+                return lang.salary;
+            } else if (question.toLowerCase().includes('contrat') || question.toLowerCase().includes('contract')) {
+                return lang.contract;
+            } else if (question.toLowerCase().includes('protection') || question.toLowerCase().includes('social')) {
+                return lang.protection;
+            }
+
+            return lang.default;
+        }
+
+        const savedLang = localStorage.getItem('socium_worker_language');
+        if (savedLang) {
+            currentLanguage = savedLang;
+        }
+
+        setTimeout(() => {
+            const autoTimeout = setTimeout(() => {
+                selectLanguage('fr');
+            }, 10000);
+
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    clearTimeout(autoTimeout);
+                });
+            });
+        }, 1000);
+
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                currentUser = session.user;
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+            }
+        });
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(() => console.log('Service Worker registered'))
+                .catch((error) => console.log('Service Worker registration failed:', error));
+        }
+
+        async function getKoraResponseEnhanced(question) {
+            try {
+                const apiUrl = `${SUPABASE_URL}/functions/v1/kora-assistant`;
+                const { data: { session } } = await supabaseClient.auth.getSession();
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${session?.access_token || SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question,
+                        language: currentLanguage,
+                        userId: currentUser?.id
+                    })
+                });
+
+                const data = await response.json();
+                return data.response;
+            } catch (error) {
+                console.error('Error calling Kora API:', error);
+                return getKoraResponse(question);
+            }
+        }
+    </script>
+</body>
+</html>

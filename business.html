@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socium Business - Gestion d'Entreprise</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #FAF8F3;
+      color: #1a202c;
+      line-height: 1.5;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+    }
+    .primary-btn {
+      background: #2D3A8C;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .primary-btn:hover {
+      background: #1e2660;
+      transform: translateY(-1px);
+    }
+    .secondary-btn {
+      background: white;
+      color: #2D3A8C;
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: 2px solid #2D3A8C;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .secondary-btn:hover {
+      background: #f7fafc;
+    }
+    .gold-badge {
+      background: linear-gradient(135deg, #D4A017 0%, #F4D03F 100%);
+      color: #1a202c;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .status-pending { background: #FED7D7; color: #9B2C2C; }
+    .status-approved { background: #C6F6D5; color: #22543D; }
+    .status-submitted { background: #FEF3C7; color: #975A16; }
+    .metric-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .nav-tab {
+      padding: 12px 24px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      font-weight: 600;
+      color: #4A5568;
+      transition: all 0.2s;
+    }
+    .nav-tab:hover {
+      color: #2D3A8C;
+    }
+    .nav-tab.active {
+      color: #2D3A8C;
+      border-bottom-color: #D4A017;
+    }
+    .icon-card {
+      background: white;
+      border: 2px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .icon-card:hover {
+      border-color: #2D3A8C;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(45, 58, 140, 0.1);
+    }
+    .icon-card.selected {
+      border-color: #2D3A8C;
+      background: #EBF4FF;
+    }
+    .entry-row {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .entry-row:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .entry-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    .entry-icon.income { background: #C6F6D5; color: #22543D; }
+    .entry-icon.expense { background: #FED7D7; color: #9B2C2C; }
+    .entry-icon.payroll { background: #BEE3F8; color: #2C5282; }
+    .entry-icon.tax { background: #E9D8FD; color: #553C9A; }
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      background: #2D3A8C;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(45, 58, 140, 0.3);
+      transition: all 0.2s;
+      z-index: 1000;
+    }
+    .fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(45, 58, 140, 0.4);
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .progress-bar {
+      height: 4px;
+      background: #E2E8F0;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #2D3A8C 0%, #D4A017 100%);
+      transition: width 0.3s;
+    }
+    .step-indicator {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .step-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .step-dot.active {
+      background: #2D3A8C;
+      color: white;
+    }
+    .step-dot.completed {
+      background: #D4A017;
+      color: white;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="tel"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #E2E8F0;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #2D3A8C;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2D3748;
+    }
+    .wizard-section {
+      display: none;
+    }
+    .wizard-section.active {
+      display: block;
+    }
+    @media print {
+      body { background: white; }
+      .no-print { display: none !important; }
+      .metric-card { box-shadow: none; border: 1px solid #E2E8F0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app" style="min-height: 100vh;">
+    <header style="background: white; border-bottom: 2px solid #E2E8F0; padding: 16px 24px;">
+      <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+        <h1 style="font-size: 1.5rem; color: #2D3A8C;">
+          🏢 Socium Business
+        </h1>
+        <div style="display: flex; gap: 16px; align-items: center;">
+          <select id="languageSelector" style="padding: 8px 12px; border-radius: 6px; border: 2px solid #E2E8F0;">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="ha">🇳🇬 Hausa</option>
+            <option value="pt">🇲🇿 Português</option>
+          </select>
+          <button onclick="showUserMenu()" style="background: #2D3A8C; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer;">
+            👤 <span id="userName">Utilisateur</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <nav style="background: white; border-bottom: 2px solid #E2E8F0;">
+      <div style="max-width: 1200px; margin: 0 auto; display: flex; gap: 0;">
+        <div class="nav-tab active" onclick="switchTab('business')" data-i18n="nav_business">🏢 Mon Entreprise</div>
+        <div class="nav-tab" onclick="switchTab('accounting')" data-i18n="nav_accounting">📒 Comptabilité</div>
+        <div class="nav-tab" onclick="switchTab('tax')" data-i18n="nav_tax">📋 Déclarations</div>
+      </div>
+    </nav>
+
+    <main style="max-width: 1200px; margin: 0 auto; padding: 32px 24px;">
+
+      <!-- BUSINESS TAB -->
+      <div id="businessTab" class="tab-content">
+        <div id="businessEmpty" style="text-align: center; padding: 64px 20px;">
+          <div style="font-size: 80px; margin-bottom: 24px;">🏪</div>
+          <h2 style="font-size: 1.75rem; margin-bottom: 16px;" data-i18n="business_empty_title">Enregistrez votre entreprise</h2>
+          <p style="color: #4A5568; max-width: 600px; margin: 0 auto 32px; font-size: 1.125rem;" data-i18n="business_empty_desc">
+            Accédez aux marchés formels, obtenez des crédits et protégez vos travailleurs en formalisant votre activité.
+          </p>
+          <button class="primary-btn" onclick="startBusinessProfile()" data-i18n="business_empty_cta">🏢 Créer mon profil d'entreprise</button>
+        </div>
+
+        <div id="businessProfile" style="display: none;">
+          <div class="metric-card" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
+              <div>
+                <h2 style="font-size: 1.75rem; margin-bottom: 8px;" id="businessName">Mon Entreprise</h2>
+                <p style="color: #4A5568;" id="businessType">Type d'activité</p>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+                <span class="gold-badge" id="rcBadge" style="display: none;">✅ RC Enregistré</span>
+                <span class="gold-badge" id="nineaBadge" style="display: none;">✅ NINEA</span>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+              <div>
+                <div style="font-size: 0.875rem; color: #4A5568; margin-bottom: 4px;">📍 Adresse</div>
+                <div style="font-weight: 600;" id="businessAddress">-</div>
+              </div>
+              <div>
+                <div style="font-size: 0.875rem; color: #4A5568; margin-bottom: 4px;">📞 Téléphone</div>
+                <div style="font-weight: 600;" id="businessPhone">-</div>
+              </div>
+              <div>
+                <div style="font-size: 0.875rem; color: #4A5568; margin-bottom: 4px;">📅 Date de création</div>
+                <div style="font-weight: 600;" id="businessFounded">-</div>
+              </div>
+              <div>
+                <div style="font-size: 0.875rem; color: #4A5568; margin-bottom: 4px;">🌍 Pays</div>
+                <div style="font-weight: 600;" id="businessCountry">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+            <div class="metric-card" style="cursor: pointer;" onclick="startRCWizard()">
+              <div style="font-size: 48px; margin-bottom: 16px;">📄</div>
+              <h3 style="font-size: 1.25rem; margin-bottom: 8px;" data-i18n="rc_title">Registre de Commerce</h3>
+              <p style="color: #4A5568; font-size: 0.875rem; margin-bottom: 16px;" data-i18n="rc_desc">
+                Votre carte d'identité légale d'entrepreneur
+              </p>
+              <span class="status-badge status-pending" id="rcStatus">Non enregistré</span>
+            </div>
+
+            <div class="metric-card" style="cursor: pointer;" onclick="startNineaWizard()">
+              <div style="font-size: 48px; margin-bottom: 16px;">🛡️</div>
+              <h3 style="font-size: 1.25rem; margin-bottom: 8px;" data-i18n="ninea_title">Identification Fiscale</h3>
+              <p style="color: #4A5568; font-size: 0.875rem; margin-bottom: 16px;" data-i18n="ninea_desc">
+                NINEA/NIF pour payer vos impôts légalement
+              </p>
+              <span class="status-badge status-pending" id="nineaStatus">Non enregistré</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <h3 style="font-size: 1.25rem; margin-bottom: 16px;" data-i18n="compliance_score">Score de Conformité</h3>
+            <div style="background: #E2E8F0; height: 24px; border-radius: 12px; overflow: hidden; margin-bottom: 16px;">
+              <div id="complianceBar" style="height: 100%; background: linear-gradient(90deg, #C1440E 0%, #D4A017 50%, #2D6A4F 100%); width: 0%; transition: width 0.5s;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <span style="font-size: 2rem; font-weight: 700;" id="complianceScore">0</span>
+                <span style="color: #4A5568;">/100</span>
+              </div>
+              <button class="secondary-btn" onclick="getComplianceAdvice()">🤖 Conseils IA</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCOUNTING TAB -->
+      <div id="accountingTab" class="tab-content" style="display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 32px;">
+          <div class="metric-card" style="background: linear-gradient(135deg, #C6F6D5 0%, #9AE6B4 100%);">
+            <div style="font-size: 0.875rem; color: #22543D; margin-bottom: 8px; font-weight: 600;">💰 Recettes</div>
+            <div style="font-size: 2rem; font-weight: 700; color: #22543D;" id="totalIncome">0 XOF</div>
+          </div>
+          <div class="metric-card" style="background: linear-gradient(135deg, #FED7D7 0%, #FCA5A5 100%);">
+            <div style="font-size: 0.875rem; color: #9B2C2C; margin-bottom: 8px; font-weight: 600;">📤 Dépenses</div>
+            <div style="font-size: 2rem; font-weight: 700; color: #9B2C2C;" id="totalExpenses">0 XOF</div>
+          </div>
+          <div class="metric-card" style="background: linear-gradient(135deg, #BEE3F8 0%, #90CDF4 100%);">
+            <div style="font-size: 0.875rem; color: #2C5282; margin-bottom: 8px; font-weight: 600;">📊 Résultat</div>
+            <div style="font-size: 2rem; font-weight: 700; color: #2C5282;" id="netResult">0 XOF</div>
+          </div>
+        </div>
+
+        <div class="metric-card" style="margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="font-size: 1.25rem;">📈 Évolution</h3>
+            <div style="display: flex; gap: 8px;">
+              <button class="secondary-btn" style="padding: 8px 16px;" onclick="setPeriod('month')">Ce mois</button>
+              <button class="secondary-btn" style="padding: 8px 16px;" onclick="setPeriod('quarter')">Trimestre</button>
+              <button class="secondary-btn" style="padding: 8px 16px;" onclick="setPeriod('year')">Année</button>
+            </div>
+          </div>
+          <div id="cashFlowChart" style="height: 200px; display: flex; align-items: flex-end; gap: 8px; justify-content: space-around;">
+            <!-- Chart will be generated here -->
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="font-size: 1.25rem;">📒 Le Livre de Compte</h3>
+            <button class="secondary-btn" onclick="importPayroll()">🔄 Importer salaires</button>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <input type="text" id="searchEntries" placeholder="🔍 Rechercher..." style="width: 100%;">
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+            <button class="secondary-btn" style="padding: 6px 12px; font-size: 0.875rem;" onclick="filterEntries('all')">Tout</button>
+            <button class="secondary-btn" style="padding: 6px 12px; font-size: 0.875rem;" onclick="filterEntries('income')">Recettes</button>
+            <button class="secondary-btn" style="padding: 6px 12px; font-size: 0.875rem;" onclick="filterEntries('expense')">Dépenses</button>
+            <button class="secondary-btn" style="padding: 6px 12px; font-size: 0.875rem;" onclick="filterEntries('payroll')">Paie</button>
+            <button class="secondary-btn" style="padding: 6px 12px; font-size: 0.875rem;" onclick="filterEntries('tax')">Impôts</button>
+          </div>
+
+          <div id="entriesList">
+            <div style="text-align: center; padding: 40px; color: #4A5568;">
+              Aucune transaction enregistrée
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAX TAB -->
+      <div id="taxTab" class="tab-content" style="display: none;">
+        <div class="metric-card" style="margin-bottom: 24px;">
+          <h3 style="font-size: 1.25rem; margin-bottom: 16px;">📅 Calendrier Fiscal</h3>
+          <div id="taxCalendar">
+            <div style="text-align: center; padding: 40px; color: #4A5568;">
+              Aucune obligation fiscale programmée
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <h3 style="font-size: 1.25rem; margin-bottom: 16px;">📋 Obligations à venir</h3>
+          <div id="taxObligations">
+            <div style="text-align: center; padding: 40px; color: #4A5568;">
+              Chargement...
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- FAB Button -->
+    <div class="fab no-print" onclick="quickAddEntry()">+</div>
+
+    <!-- Business Profile Wizard Modal -->
+    <div id="businessWizardModal" class="modal">
+      <div class="modal-content">
+        <div class="progress-bar">
+          <div class="progress-fill" id="wizardProgress" style="width: 25%;"></div>
+        </div>
+
+        <div class="step-indicator">
+          <div class="step-dot active" id="step1Dot">1</div>
+          <div class="step-dot" id="step2Dot">2</div>
+          <div class="step-dot" id="step3Dot">3</div>
+          <div class="step-dot" id="step4Dot">4</div>
+        </div>
+
+        <!-- Step 1: Identity -->
+        <div id="wizardStep1" class="wizard-section active">
+          <h2 style="margin-bottom: 24px; font-size: 1.5rem;">🏢 Identité de l'entreprise</h2>
+
+          <div class="form-group">
+            <label class="form-label">Nom de l'entreprise</label>
+            <input type="text" id="bizName" placeholder="Ex: Ferme de Tambacounda">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Type d'activité</label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;">
+              <div class="icon-card" onclick="selectBusinessType('agriculture')">
+                <div style="font-size: 32px; margin-bottom: 8px;">🌾</div>
+                <div style="font-size: 0.875rem;">Agriculture</div>
+              </div>
+              <div class="icon-card" onclick="selectBusinessType('construction')">
+                <div style="font-size: 32px; margin-bottom: 8px;">🧱</div>
+                <div style="font-size: 0.875rem;">Construction</div>
+              </div>
+              <div class="icon-card" onclick="selectBusinessType('commerce')">
+                <div style="font-size: 32px; margin-bottom: 8px;">🛒</div>
+                <div style="font-size: 0.875rem;">Commerce</div>
+              </div>
+              <div class="icon-card" onclick="selectBusinessType('artisanat')">
+                <div style="font-size: 32px; margin-bottom: 8px;">🪡</div>
+                <div style="font-size: 0.875rem;">Artisanat</div>
+              </div>
+              <div class="icon-card" onclick="selectBusinessType('transport')">
+                <div style="font-size: 32px; margin-bottom: 8px;">🚛</div>
+                <div style="font-size: 0.875rem;">Transport</div>
+              </div>
+              <div class="icon-card" onclick="selectBusinessType('service')">
+                <div style="font-size: 32px; margin-bottom: 8px;">⚙️</div>
+                <div style="font-size: 0.875rem;">Service</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Pays</label>
+            <select id="bizCountry">
+              <option value="SN">🇸🇳 Sénégal</option>
+              <option value="ML">🇲🇱 Mali</option>
+              <option value="CI">🇨🇮 Côte d'Ivoire</option>
+              <option value="KE">🇰🇪 Kenya</option>
+              <option value="UG">🇺🇬 Uganda</option>
+              <option value="NG">🇳🇬 Nigeria</option>
+              <option value="MZ">🇲🇿 Mozambique</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Région/Province</label>
+            <input type="text" id="bizRegion" placeholder="Ex: Tambacounda">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date de création</label>
+            <input type="date" id="bizFounded">
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 32px;">
+            <button class="secondary-btn" onclick="closeBusinessWizard()">Annuler</button>
+            <button class="primary-btn" style="flex: 1;" onclick="nextWizardStep(2)">Suivant →</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Contact -->
+        <div id="wizardStep2" class="wizard-section">
+          <h2 style="margin-bottom: 24px; font-size: 1.5rem;">📞 Coordonnées</h2>
+
+          <div class="form-group">
+            <label class="form-label">Téléphone professionnel</label>
+            <input type="tel" id="bizPhone" placeholder="+221 77 123 45 67">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Adresse complète</label>
+            <textarea id="bizAddress" rows="3" placeholder="Ex: Marché central, Avenue Demba Diop"></textarea>
+            <button class="secondary-btn" style="margin-top: 8px; width: 100%;" onclick="useGPS()">📍 Utiliser ma position GPS</button>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Village/Quartier</label>
+            <input type="text" id="bizNeighborhood" placeholder="Ex: Quartier Résidentiel">
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 32px;">
+            <button class="secondary-btn" onclick="nextWizardStep(1)">← Retour</button>
+            <button class="primary-btn" style="flex: 1;" onclick="nextWizardStep(3)">Suivant →</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Owner -->
+        <div id="wizardStep3" class="wizard-section">
+          <h2 style="margin-bottom: 24px; font-size: 1.5rem;">👤 Responsable</h2>
+
+          <div class="form-group">
+            <label class="form-label">Nom complet du propriétaire</label>
+            <input type="text" id="ownerName" placeholder="Prénom et nom">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Numéro CNI/Passeport</label>
+            <input type="text" id="ownerCNI" placeholder="Ex: 1234567890123">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date de naissance</label>
+            <input type="date" id="ownerDOB">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nationalité</label>
+            <input type="text" id="ownerNationality" placeholder="Ex: Sénégalaise">
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 32px;">
+            <button class="secondary-btn" onclick="nextWizardStep(2)">← Retour</button>
+            <button class="primary-btn" style="flex: 1;" onclick="nextWizardStep(4)">Suivant →</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Summary -->
+        <div id="wizardStep4" class="wizard-section">
+          <h2 style="margin-bottom: 24px; font-size: 1.5rem;">✅ Résumé et validation</h2>
+
+          <div style="background: #EBF4FF; border: 2px solid #2D3A8C; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+              <div style="font-size: 32px;">🤖</div>
+              <div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Intelligence Artificielle</div>
+                <div style="font-size: 0.875rem; color: #4A5568;">L'IA va préparer vos documents automatiquement</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="businessSummary" style="background: white; border: 2px solid #E2E8F0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <!-- Summary will be populated here -->
+          </div>
+
+          <div style="display: flex; gap: 12px;">
+            <button class="secondary-btn" onclick="nextWizardStep(3)">← Retour</button>
+            <button class="primary-btn" style="flex: 1;" onclick="saveBusiness()">✅ Confirmer et continuer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Entry Modal -->
+    <div id="quickEntryModal" class="modal">
+      <div class="modal-content">
+        <h2 style="margin-bottom: 24px; font-size: 1.5rem;">➕ Nouvelle transaction</h2>
+
+        <div id="entryTypeSelect">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div class="icon-card" onclick="selectEntryType('income')">
+              <div style="font-size: 48px; margin-bottom: 12px;">💰</div>
+              <div style="font-weight: 600;">Recette</div>
+            </div>
+            <div class="icon-card" onclick="selectEntryType('expense')">
+              <div style="font-size: 48px; margin-bottom: 12px;">📤</div>
+              <div style="font-weight: 600;">Dépense</div>
+            </div>
+            <div class="icon-card" onclick="selectEntryType('payroll')">
+              <div style="font-size: 48px; margin-bottom: 12px;">💼</div>
+              <div style="font-weight: 600;">Salaires</div>
+            </div>
+            <div class="icon-card" onclick="selectEntryType('tax')">
+              <div style="font-size: 48px; margin-bottom: 12px;">🏛️</div>
+              <div style="font-weight: 600;">Impôt</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="entryForm" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Montant</label>
+            <input type="number" id="entryAmount" placeholder="0" style="font-size: 1.5rem; text-align: center;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Catégorie</label>
+            <select id="entryCategory">
+              <option value="">Sélectionner...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" id="entryDescription" placeholder="Ex: Vente de maïs">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" id="entryDate">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mode de paiement</label>
+            <select id="entryPaymentMethod">
+              <option value="cash">💵 Espèces</option>
+              <option value="mobile_money">📱 Mobile Money</option>
+              <option value="bank">🏦 Banque</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button class="secondary-btn" onclick="closeQuickEntry()">Annuler</button>
+            <button class="primary-btn" style="flex: 1;" onclick="saveEntry()">✅ Enregistrer</button>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; text-align: center;">
+          <button class="secondary-btn" onclick="closeQuickEntry()">Fermer</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://lfvynjyetqhveovlcnlj.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdnluanlldHFodmVvdmxjbmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzY5MTQsImV4cCI6MjA4OTIxMjkxNH0.cH_0gbffALMg150aMpE7L1u8vy0H0byjB9pzQAKo-B4';
+
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let currentBusiness = null;
+    let currentLanguage = 'fr';
+    let wizardData = {};
+    let currentEntryType = null;
+
+    const TRANSLATIONS = {
+      fr: {
+        nav_business: '🏢 Mon Entreprise',
+        nav_accounting: '📒 Comptabilité',
+        nav_tax: '📋 Déclarations',
+        business_empty_title: 'Enregistrez votre entreprise',
+        business_empty_desc: 'Accédez aux marchés formels, obtenez des crédits et protégez vos travailleurs en formalisant votre activité.',
+        business_empty_cta: '🏢 Créer mon profil d\'entreprise',
+        rc_title: 'Registre de Commerce',
+        rc_desc: 'Votre carte d\'identité légale d\'entrepreneur',
+        ninea_title: 'Identification Fiscale',
+        ninea_desc: 'NINEA/NIF pour payer vos impôts légalement',
+        compliance_score: 'Score de Conformité'
+      },
+      en: {
+        nav_business: '🏢 My Business',
+        nav_accounting: '📒 Accounting',
+        nav_tax: '📋 Tax Returns',
+        business_empty_title: 'Register your business',
+        business_empty_desc: 'Access formal markets, get credit and protect your workers by formalizing your business.',
+        business_empty_cta: '🏢 Create my business profile',
+        rc_title: 'Business Registration',
+        rc_desc: 'Your legal business identity card',
+        ninea_title: 'Tax Identification',
+        ninea_desc: 'Tax ID to pay taxes legally',
+        compliance_score: 'Compliance Score'
+      }
+    };
+
+    async function init() {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        window.location.href = '/';
+        return;
+      }
+      currentUser = user;
+      document.getElementById('userName').textContent = user.email?.split('@')[0] || 'User';
+
+      await loadBusiness();
+      updateTranslations();
+    }
+
+    async function loadBusiness() {
+      try {
+        const { data, error } = await sb
+          .from('businesses')
+          .select('*')
+          .eq('owner_id', currentUser.id)
+          .maybeSingle();
+
+        if (data) {
+          currentBusiness = data;
+          showBusinessProfile();
+          loadAccountingData();
+          loadTaxObligations();
+        } else {
+          document.getElementById('businessEmpty').style.display = 'block';
+          document.getElementById('businessProfile').style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Error loading business:', err);
+      }
+    }
+
+    function showBusinessProfile() {
+      document.getElementById('businessEmpty').style.display = 'none';
+      document.getElementById('businessProfile').style.display = 'block';
+
+      document.getElementById('businessName').textContent = currentBusiness.business_name;
+      document.getElementById('businessType').textContent = currentBusiness.business_type || '-';
+      document.getElementById('businessAddress').textContent = currentBusiness.address || '-';
+      document.getElementById('businessPhone').textContent = currentBusiness.phone || '-';
+      document.getElementById('businessFounded').textContent = currentBusiness.founded_date || '-';
+      document.getElementById('businessCountry').textContent = currentBusiness.country || '-';
+
+      if (currentBusiness.rc_number) {
+        document.getElementById('rcBadge').style.display = 'inline-block';
+        document.getElementById('rcStatus').textContent = 'RC: ' + currentBusiness.rc_number;
+        document.getElementById('rcStatus').className = 'status-badge status-approved';
+      }
+
+      if (currentBusiness.ninea) {
+        document.getElementById('nineaBadge').style.display = 'inline-block';
+        document.getElementById('nineaStatus').textContent = 'NINEA: ' + currentBusiness.ninea;
+        document.getElementById('nineaStatus').className = 'status-badge status-approved';
+      }
+
+      updateComplianceScore();
+    }
+
+    function updateComplianceScore() {
+      let score = 0;
+      if (currentBusiness.rc_number) score += 25;
+      if (currentBusiness.ninea) score += 25;
+      score += 50;
+
+      document.getElementById('complianceScore').textContent = score;
+      document.getElementById('complianceBar').style.width = score + '%';
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+
+      event.target.classList.add('active');
+
+      if (tab === 'business') {
+        document.getElementById('businessTab').style.display = 'block';
+      } else if (tab === 'accounting') {
+        document.getElementById('accountingTab').style.display = 'block';
+        loadAccountingData();
+      } else if (tab === 'tax') {
+        document.getElementById('taxTab').style.display = 'block';
+        loadTaxObligations();
+      }
+    }
+
+    function startBusinessProfile() {
+      wizardData = {};
+      document.getElementById('businessWizardModal').classList.add('active');
+    }
+
+    function closeBusinessWizard() {
+      document.getElementById('businessWizardModal').classList.remove('active');
+    }
+
+    function nextWizardStep(step) {
+      document.querySelectorAll('.wizard-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
+
+      document.getElementById('wizardStep' + step).classList.add('active');
+      document.getElementById('step' + step + 'Dot').classList.add('active');
+
+      const progress = (step / 4) * 100;
+      document.getElementById('wizardProgress').style.width = progress + '%';
+
+      for (let i = 1; i < step; i++) {
+        document.getElementById('step' + i + 'Dot').classList.add('completed');
+      }
+
+      if (step === 4) {
+        showBusinessSummary();
+      }
+    }
+
+    function selectBusinessType(type) {
+      document.querySelectorAll('#wizardStep1 .icon-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      event.currentTarget.classList.add('selected');
+      wizardData.businessType = type;
+    }
+
+    function showBusinessSummary() {
+      wizardData.businessName = document.getElementById('bizName').value;
+      wizardData.country = document.getElementById('bizCountry').value;
+      wizardData.region = document.getElementById('bizRegion').value;
+      wizardData.founded = document.getElementById('bizFounded').value;
+      wizardData.phone = document.getElementById('bizPhone').value;
+      wizardData.address = document.getElementById('bizAddress').value;
+      wizardData.ownerName = document.getElementById('ownerName').value;
+
+      const summary = `
+        <div style="margin-bottom: 16px;">
+          <div style="font-weight: 600; color: #4A5568; margin-bottom: 4px;">Nom de l'entreprise</div>
+          <div style="font-size: 1.125rem;">${wizardData.businessName}</div>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <div style="font-weight: 600; color: #4A5568; margin-bottom: 4px;">Type d'activité</div>
+          <div>${wizardData.businessType}</div>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <div style="font-weight: 600; color: #4A5568; margin-bottom: 4px;">Localisation</div>
+          <div>${wizardData.region}, ${wizardData.country}</div>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <div style="font-weight: 600; color: #4A5568; margin-bottom: 4px;">Contact</div>
+          <div>${wizardData.phone}</div>
+        </div>
+      `;
+
+      document.getElementById('businessSummary').innerHTML = summary;
+    }
+
+    async function saveBusiness() {
+      try {
+        const { data, error } = await sb
+          .from('businesses')
+          .insert({
+            owner_id: currentUser.id,
+            business_name: wizardData.businessName,
+            business_type: wizardData.businessType,
+            country: wizardData.country,
+            region: wizardData.region,
+            address: wizardData.address,
+            phone: wizardData.phone,
+            founded_date: wizardData.founded
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        currentBusiness = data;
+        closeBusinessWizard();
+        showBusinessProfile();
+        alert('✅ Profil d\'entreprise créé avec succès!');
+      } catch (err) {
+        console.error('Error saving business:', err);
+        alert('❌ Erreur lors de la sauvegarde');
+      }
+    }
+
+    function useGPS() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          document.getElementById('bizAddress').value = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        }, error => {
+          alert('Impossible d\'obtenir votre position');
+        });
+      }
+    }
+
+    async function loadAccountingData() {
+      if (!currentBusiness) return;
+
+      try {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        const { data, error } = await sb
+          .from('accounting_entries')
+          .select('*')
+          .eq('business_id', currentBusiness.id)
+          .gte('entry_date', firstDay.toISOString().split('T')[0])
+          .order('entry_date', { ascending: false });
+
+        if (error) throw error;
+
+        let totalIncome = 0;
+        let totalExpenses = 0;
+
+        data?.forEach(entry => {
+          if (entry.entry_type === 'income') {
+            totalIncome += parseFloat(entry.amount);
+          } else {
+            totalExpenses += parseFloat(entry.amount);
+          }
+        });
+
+        document.getElementById('totalIncome').textContent = totalIncome.toLocaleString() + ' XOF';
+        document.getElementById('totalExpenses').textContent = totalExpenses.toLocaleString() + ' XOF';
+        document.getElementById('netResult').textContent = (totalIncome - totalExpenses).toLocaleString() + ' XOF';
+
+        displayEntries(data || []);
+        generateCashFlowChart(data || []);
+      } catch (err) {
+        console.error('Error loading accounting data:', err);
+      }
+    }
+
+    function displayEntries(entries) {
+      const list = document.getElementById('entriesList');
+
+      if (entries.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 40px; color: #4A5568;">Aucune transaction enregistrée</div>';
+        return;
+      }
+
+      const icons = {
+        income: '💰',
+        expense: '📤',
+        payroll: '💼',
+        tax: '🏛️'
+      };
+
+      list.innerHTML = entries.map(entry => `
+        <div class="entry-row">
+          <div class="entry-icon ${entry.entry_type}">${icons[entry.entry_type] || '💵'}</div>
+          <div style="flex: 1;">
+            <div style="font-weight: 600;">${entry.category || entry.entry_type}</div>
+            <div style="font-size: 0.875rem; color: #4A5568;">${entry.description}</div>
+            <div style="font-size: 0.75rem; color: #A0AEC0;">${entry.entry_date}</div>
+          </div>
+          <div style="font-size: 1.25rem; font-weight: 700; color: ${entry.entry_type === 'income' ? '#22543D' : '#9B2C2C'};">
+            ${entry.entry_type === 'income' ? '+' : '-'}${parseFloat(entry.amount).toLocaleString()} ${entry.currency}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function generateCashFlowChart(entries) {
+      const chart = document.getElementById('cashFlowChart');
+      const months = {};
+
+      entries.forEach(entry => {
+        const month = entry.entry_date.substring(0, 7);
+        if (!months[month]) {
+          months[month] = { income: 0, expense: 0 };
+        }
+        if (entry.entry_type === 'income') {
+          months[month].income += parseFloat(entry.amount);
+        } else {
+          months[month].expense += parseFloat(entry.amount);
+        }
+      });
+
+      const monthKeys = Object.keys(months).sort().slice(-6);
+      const maxValue = Math.max(...monthKeys.map(m => Math.max(months[m].income, months[m].expense)));
+
+      chart.innerHTML = monthKeys.map(month => {
+        const data = months[month];
+        const incomeHeight = (data.income / maxValue) * 180;
+        const expenseHeight = (data.expense / maxValue) * 180;
+
+        return `
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            <div style="display: flex; gap: 4px; align-items: flex-end; height: 180px;">
+              <div style="width: 20px; background: #48BB78; height: ${incomeHeight}px; border-radius: 4px 4px 0 0;"></div>
+              <div style="width: 20px; background: #F56565; height: ${expenseHeight}px; border-radius: 4px 4px 0 0;"></div>
+            </div>
+            <div style="font-size: 0.75rem; color: #4A5568;">${month.split('-')[1]}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function quickAddEntry() {
+      if (!currentBusiness) {
+        alert('Veuillez d\'abord créer votre profil d\'entreprise');
+        return;
+      }
+      document.getElementById('entryDate').valueAsDate = new Date();
+      document.getElementById('quickEntryModal').classList.add('active');
+      document.getElementById('entryTypeSelect').style.display = 'block';
+      document.getElementById('entryForm').style.display = 'none';
+    }
+
+    function closeQuickEntry() {
+      document.getElementById('quickEntryModal').classList.remove('active');
+      currentEntryType = null;
+    }
+
+    function selectEntryType(type) {
+      currentEntryType = type;
+      document.getElementById('entryTypeSelect').style.display = 'none';
+      document.getElementById('entryForm').style.display = 'block';
+
+      const categorySelect = document.getElementById('entryCategory');
+      categorySelect.innerHTML = '<option value="">Sélectionner...</option>';
+
+      if (type === 'income') {
+        ['Ventes', 'Prestation', 'Subvention', 'Location', 'Autre'].forEach(cat => {
+          categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+      } else if (type === 'expense') {
+        ['Intrants', 'Loyer', 'Transport', 'Matériel', 'Eau/Elec', 'Télécommunications', 'Autre'].forEach(cat => {
+          categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+      } else if (type === 'payroll') {
+        categorySelect.innerHTML += '<option value="Salaires">Salaires</option>';
+      } else if (type === 'tax') {
+        ['Patente', 'TVA', 'IRPP', 'IS', 'Autre'].forEach(cat => {
+          categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+      }
+    }
+
+    async function saveEntry() {
+      const amount = document.getElementById('entryAmount').value;
+      const category = document.getElementById('entryCategory').value;
+      const description = document.getElementById('entryDescription').value;
+      const date = document.getElementById('entryDate').value;
+      const paymentMethod = document.getElementById('entryPaymentMethod').value;
+
+      if (!amount || !category) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      try {
+        const { error } = await sb
+          .from('accounting_entries')
+          .insert({
+            business_id: currentBusiness.id,
+            entry_type: currentEntryType,
+            category: category,
+            description: description,
+            amount: parseFloat(amount),
+            entry_date: date,
+            payment_method: paymentMethod,
+            currency: 'XOF'
+          });
+
+        if (error) throw error;
+
+        closeQuickEntry();
+        loadAccountingData();
+        alert('✅ Transaction enregistrée avec succès!');
+      } catch (err) {
+        console.error('Error saving entry:', err);
+        alert('❌ Erreur lors de l\'enregistrement');
+      }
+    }
+
+    function filterEntries(type) {
+      loadAccountingData();
+    }
+
+    function setPeriod(period) {
+      loadAccountingData();
+    }
+
+    async function importPayroll() {
+      alert('Fonctionnalité à venir: import automatique des salaires');
+    }
+
+    async function loadTaxObligations() {
+      if (!currentBusiness) return;
+
+      try {
+        const { data, error } = await sb
+          .from('tax_obligations')
+          .select('*')
+          .eq('business_id', currentBusiness.id)
+          .order('due_date', { ascending: true });
+
+        if (error) throw error;
+
+        const list = document.getElementById('taxObligations');
+
+        if (!data || data.length === 0) {
+          list.innerHTML = '<div style="text-align: center; padding: 40px; color: #4A5568;">Aucune obligation fiscale programmée</div>';
+          return;
+        }
+
+        list.innerHTML = data.map(obligation => {
+          const statusClass = obligation.status === 'paid' ? 'status-approved' :
+                            obligation.status === 'overdue' ? 'status-pending' : 'status-submitted';
+          return `
+            <div class="entry-row">
+              <div class="entry-icon tax">🏛️</div>
+              <div style="flex: 1;">
+                <div style="font-weight: 600;">${obligation.obligation_type}</div>
+                <div style="font-size: 0.875rem; color: #4A5568;">Échéance: ${obligation.due_date}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 1.125rem; font-weight: 700;">${parseFloat(obligation.amount_due).toLocaleString()} XOF</div>
+                <span class="status-badge ${statusClass}">${obligation.status}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('Error loading tax obligations:', err);
+      }
+    }
+
+    function startRCWizard() {
+      alert('Assistant d\'enregistrement RC à venir');
+    }
+
+    function startNineaWizard() {
+      alert('Assistant d\'enregistrement NINEA à venir');
+    }
+
+    function getComplianceAdvice() {
+      alert('Conseils IA à venir');
+    }
+
+    function updateTranslations() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (TRANSLATIONS[currentLanguage] && TRANSLATIONS[currentLanguage][key]) {
+          el.textContent = TRANSLATIONS[currentLanguage][key];
+        }
+      });
+    }
+
+    document.getElementById('languageSelector').addEventListener('change', (e) => {
+      currentLanguage = e.target.value;
+      updateTranslations();
+    });
+
+    init();
+  </script>
+
+</body>
+</html>
